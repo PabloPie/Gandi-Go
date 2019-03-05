@@ -30,6 +30,56 @@ type VMSpec struct {
 	SSHKey     string
 }
 ```
+
+```
+type RegionInstance struct {
+	id					int
+	name				string
+	state				int
+}
+```
+
+```
+type ImageInstance struct {
+	id					int
+	disk_id				int
+	ragion_id			int
+	name				string
+	os					string
+	size				int
+	state				int
+}
+```
+
+
+```
+type DiskInstance struct {
+	id					int
+	name				string
+	size				int
+	datacenter			int
+	state				string
+	type				string
+	vm					int[]
+	is_bootable			bool
+//	is_migrating		bool
+	can_snapshot		bool
+}
+```
+
+```
+type IpInstance struct {
+	id					int
+	ip					string
+	region_id			int
+	version				int
+	vm_id				int
+	state				string
+}
+```
+
+
+
 ```
 type hosting interface {
 
@@ -60,10 +110,31 @@ func infoVM()                                   {}
 func update()                                   {}
 func migrateVM()                                {}
 
-//
-func createDisk() {}
 
-//
-func createIP() {}
+
+// Disk
+func createDisk()								{}
+func deleteDisk()								{}
+func upgradeDisk()								{}
+
+// IP
+func createIP()									{}
+func destroyIP()								{}
+
+// Images
+func listImage(region)								{}
+
+// Regions
+func listRegions()								{}
 }
 ```
+
+
+
+## Disk image
+	- Image identifiée par un int dans l'APIv4
+	- une image = sur un DC
+## Disk
+	- Est-ce vraiment utile de proposer un countDisk() ?
+	- Il y a une histoire de noyaux dispo dans tel ou tel datacenter dans l'APIv4
+	- Migration d'un disque d'un DC à l'autre ? (en bonus ?)
