@@ -4,81 +4,109 @@ Design proposal for Gandi Hosting GO driver
 // Node represents a virtual machine
 type VMInstance struct {
 	ID           int
-	hostname     string
-	datacenterID int
-	farm         string
-	description  string
-	cores        int
-	memory       int
-	dateCreated  dateTime.iso8601
-	dateUpdated  dateTime.iso8601
-	ips          []int
-	disks        []int
-	disksID      []int
-	sshKeys      []string
-	state        string
+	Hostname     string
+	DatacenterID int
+	Farm         string
+	Description  string
+	Cores        int
+	Memory       int
+	DateCreated  dateTime.iso8601
+	Ips          []IPAddress
+	Disks        []Disk
+	SSHKeys      []string
+	State        string
 }
 ```
 ```
-// VMCreateRequest
+// VMDescription, used for vm creation
 type VMSpec struct {
-	DcID       int
-	Hostname   string
-	Memory     int
-	Cores      int
-	IPVersion  int
-	SSHKey     string
+	DatacenterID int
+	Hostname     string
+	Farm         string
+	Memory       int
+	Cores        int
+	IPVersion    int
+	SSHKey       string
+	Login        string
+	Password     string
 }
 ```
 
 ```
-type RegionInstance struct {
-	id					int
-	name				string
-	state				int
+// VMListOptions, used for filtering in VMList()
+type VMFilter struct {
+	DatacenterID   int[]
+	Farm           string[]
+	Hostname       string[]
+	State          string
+	ID             int[]
 }
 ```
 
 ```
-type ImageInstance struct {
-	id					int
-	disk_id				int
-	ragion_id			int
-	name				string
-	os					string
-	size				int
-	state				int
+type Region struct {
+	id      int
+	name    string
+	state   int
+}
+```
+
+```
+type DiskImage struct {
+	id        int
+	disk_id   int
+	region_id int
+	name      string
+	os        string
+	size      int
+	state     int
 }
 ```
 
 
 ```
-type DiskInstance struct {
-	id					int
-	name				string
-	size				int
-	datacenter			int
-	state				string
-	type				string
-	vm					int[]
-	is_bootable			bool
-//	is_migrating		bool
-	can_snapshot		bool
+type Disk struct {
+	id           int
+	name         string
+	size         int
+	datacenter   int
+	state        string
+	type         string
+	vm           int[]
+	is_bootable  bool
+//	is_migrating bool
+//	can_snapshot bool
 }
 ```
 
 ```
-type IpInstance struct {
-	id					int
-	ip					string
-	region_id			int
-	version				int
-	vm_id				int
-	state				string
+type DiskSpec struct {
+
 }
 ```
 
+```
+type DiskFilter struct {
 
+}
+```
+
+```
+type IpAddress struct {
+	ID        int
+	IP        string
+	RegionID int
+	Version   int
+	VMID     int
+	State     string
+}
+```
+
+```
+type IpAdressSpec struct {
+
+}
+```
 
 ```
 type hosting interface {
@@ -97,35 +125,36 @@ func listVM() VMInstance                        {}
 func createVM(vm_spec) VMInstance               {}
 
 // Another vm creation option
-func createVMs(vm_spec, []disk_spec, []ip_spec) {}
-func attach_disk()                              {}
-func detach_disk()                              {}
-func attach_ip()                                {}
-func detach_ip()                                {}
-func startVM()                                  {}
-func stopVM()                                   {}
-func rebootVM()                                 {}
-func deleteVM()                                 {}
-func infoVM()                                   {}
-func update()                                   {}
-func migrateVM()                                {}
+func createVMs(VMSpec vm, []disk_spec, []ip_spec) {}
+func attach_disk(VMID int, DiskID int)            {}
+func detach_disk(VMID int, DiskID int)            {}
+func attach_ip(VMID int, IpID int)                {}
+func detach_ip(VMID int, IpID int)                {}
+func startVM(VMID int)                            {}
+func stopVM(VMID int)                             {}
+func rebootVM(VMID int)                           {}
+func deleteVM(VMID int)                           {}
+func infoVM(VMID int)                             {}
+func update()                                     {}
+func migrateVM(VMID int, DCID int)                {}
+func listVMs(VMFilter filter)                     {}
 
 
 
 // Disk
-func createDisk()								{}
-func deleteDisk()								{}
-func upgradeDisk()								{}
+func createDisk()  {}
+func deleteDisk()  {}
+func upgradeDisk() {}
 
 // IP
-func createIP()									{}
-func destroyIP()								{}
+func createIP()  {}
+func deleteIP() {}
 
 // Images
-func listImage(region)								{}
+func listImages(regionID int) {}
 
 // Regions
-func listRegions()								{}
+func listRegions() {}
 }
 ```
 
