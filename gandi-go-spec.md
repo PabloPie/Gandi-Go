@@ -2,7 +2,7 @@ Design proposal for Gandi Hosting GO driver
 
 ```
 // Node represents a virtual machine
-type VMInstance struct {
+type VM struct {
 	ID           int
 	Hostname     string
 	DatacenterID int
@@ -28,6 +28,7 @@ type VMSpec struct {
 	Memory       int
 	Cores        int
 	IPVersion    int
+	Image        id
 	SSHKey       string
 	Login        string
 	Password     string
@@ -103,37 +104,46 @@ type IpAddressSpec struct {
 ```
 type hosting interface {
 
-// Sync or Async? Sync means a call has to wait up to 
-// a minute for the creation to end, async means we can't
-// abstract away "operations/events"
-func createVM(VMSpec vm, []disk_spec, []ip_spec)  {}
-func attach_disk(VMID int, DiskID int)            {}
-func detach_disk(VMID int, DiskID int)            {}
-func attach_ip(VMID int, IpID int)                {}
-func detach_ip(VMID int, IpID int)                {}
-func startVM(VMID int)                            {}
-func stopVM(VMID int)                             {}
-func rebootVM(VMID int)                           {}
-func deleteVM(VMID int)                           {}
-func infoVM(VMID int)                             {}
-func updateVM(cores int, memory int)              {}
-func listVMs()                                    {}
+//Creates vm with a new disk of size `size` from diskimage vm.image
+func createVMD(VMSpec vm, int size) VM, Disk, IPAddress             {}
 
+//Creates vm using an already existing bootable disk as system disk
+func createVM(VMSpec vm, diskid int) VM, IPAddress                  {}
 
+func attach_disk(vmid int, diskid int) bool                         {}
+func detach_disk(vmid int, diskid int) bool                         {}
+func attach_ip(vmid int, ipid int) bool                             {}
+func detach_ip(vmid int, ipid int) bool                             {}
+func startVM(vmid int) bool                                         {}
+func stopVM(vmid int) bool                                          {}
+func rebootVM(vmid int) bool                                        {}
+func deleteVM(vmid int) bool                                        {}
+func infoVM(vmid int) VMInstance                                    {}
+func updateMemoryVM(memory int) VMInstance                          {}
+func updateCoresVM(cores int) VMInstance                            {}
+func listVMs() VMInstance[]                                         {}
 
 // Disk
-func createDisk(DiskSpec)  {}
-func deleteDisk()  {}
-func extendDisk(int diskid, unsigned int size) {}
-func renameDisk(int diskid, string name) {}
+func createDisk(DiskSpec disk) Disk                   {}
+func diskInfo(int diskid) Disk                        {}
+func diskList() Disk[]                                {}
+func deleteDisk(int diskid) bool                      {}
+func extendDisk(int diskid, unsigned int size) bool   {}
+func renameDisk(int diskid, string name) bool         {}
 
 // IP
-func createIP() {}
-func deleteIP() {}
+func createIP(int version) IPAddress {}
+func infoIP(int ipid) IPAddress      {}
+func listIP() IPAddress[]            {}
+func deleteIP(int ipid) bool         {}
 
 // Images
-func listImages(regionID int) {}
-func imageByName(name string, regionID int) {}
+func listImages(regionid int) DiskImages[]      {}
+func imageByName(name string, regionid int) int {}
+
+// SSH
+func createKey(string name, string value) SSHKey      {}
+func keyfromName(string name) SSHKey                  {}
 
 // Regions
 func listRegions() {}
