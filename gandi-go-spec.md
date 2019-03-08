@@ -55,7 +55,6 @@ type DiskImage struct {
 }
 ```
 
-
 ```
 type Disk struct {
 	ID           int
@@ -99,35 +98,54 @@ type IpAddressSpec struct {
 }
 ```
 
+```
+type Vlan struct {
+
+}
+```
+
+```
+type VlanSpec struct {
+
+}
+```
+
+
 // this is our interface hosting,
 // required for v4 and v5
 ```
 type hosting interface {
 
-//Creates vm with a new disk of size `size` from diskimage vm.image
+//Creates vm with a new disk of size `size` based on diskimage vm.image
 func createVMD(VMSpec vm, int size) VM, Disk, IPAddress             {}
 
 //Creates vm using an already existing bootable disk as system disk
 func createVM(VMSpec vm, diskid int) VM, IPAddress                  {}
 
-func attach_disk(vmid int, diskid int) bool                         {}
-func detach_disk(vmid int, diskid int) bool                         {}
-func attach_ip(vmid int, ipid int) bool                             {}
-func detach_ip(vmid int, ipid int) bool                             {}
+func attachDisk(vmid int, diskid int) bool                         {}
+func detachDisk(vmid int, diskid int) bool                         {}
+func attachIP(vmid int, ipid int) bool                             {}
+func detachIP(vmid int, ipid int) bool                             {}
 func startVM(vmid int) bool                                         {}
 func stopVM(vmid int) bool                                          {}
 func rebootVM(vmid int) bool                                        {}
 func deleteVM(vmid int) bool                                        {}
 func infoVM(vmid int) VMInstance                                    {}
+
+// Updates vm memory to the value passed as parameter
 func updateMemoryVM(memory int) VMInstance                          {}
+
+// Updates the number of cores to the value passed as parameter
 func updateCoresVM(cores int) VMInstance                            {}
+
 func listVMs() VMInstance[]                                         {}
 
 // Disk
 func createDisk(DiskSpec disk) Disk                   {}
-func diskInfo(int diskid) Disk                        {}
-func diskList() Disk[]                                {}
+func infoDisk(int diskid) Disk                        {}
+func listDisk() Disk[]                                {}
 func deleteDisk(int diskid) bool                      {}
+// Extends `diskid` size by `size` (original size + `size`)
 func extendDisk(int diskid, unsigned int size) bool   {}
 func renameDisk(int diskid, string name) bool         {}
 
@@ -143,7 +161,16 @@ func imageByName(name string, regionid int) int {}
 
 // SSH
 func createKey(string name, string value) SSHKey      {}
+
+// Get the key with name `name`
 func keyfromName(string name) SSHKey                  {}
+
+// Vlan
+func createVlan(VlanSpec) {}
+func infoVlan(int vlanid) {}
+func listVlan()           {}
+func updateVlanGW()       {}
+func renameVlan()         {}
 
 // Regions
 func listRegions() {}
