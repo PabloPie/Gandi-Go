@@ -110,9 +110,10 @@ type VlanSpec struct {
 }
 ```
 
+## Hosting Interface
 
-// this is our interface hosting,
-// required for v4 and v5
+This is our interface hosting, with all the functions that are going to be implemented, required for hostingv4 and hostingv5
+
 ```
 type hosting interface {
 
