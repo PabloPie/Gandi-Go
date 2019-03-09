@@ -100,13 +100,20 @@ type IpAddressSpec struct {
 
 ```
 type Vlan struct {
-
+	ID       int
+	Name     String
+	Gateway  String
+	Subnet   String
+	RegionID int
 }
 ```
 
 ```
 type VlanSpec struct {
-
+	Name     String
+	Gateway  String
+	Subnet   String
+	RegionID int
 }
 ```
 
@@ -119,42 +126,37 @@ type hosting interface {
 
 //Creates vm with a new disk of size `size` based on diskimage vm.image
 func createVMD(VMSpec vm, int size) VM, Disk, IPAddress             {}
-
 //Creates vm using an already existing bootable disk as system disk
 func createVM(VMSpec vm, diskid int) VM, IPAddress                  {}
-
-func attachDisk(vmid int, diskid int) bool                         {}
-func detachDisk(vmid int, diskid int) bool                         {}
-func attachIP(vmid int, ipid int) bool                             {}
-func detachIP(vmid int, ipid int) bool                             {}
-func startVM(vmid int) bool                                         {}
-func stopVM(vmid int) bool                                          {}
-func rebootVM(vmid int) bool                                        {}
-func deleteVM(vmid int) bool                                        {}
+func attachDisk(vmid int, diskid int) err                           {}
+func detachDisk(vmid int, diskid int) err                           {}
+func attachIP(vmid int, ipid int) err                               {}
+func detachIP(vmid int, ipid int) err                               {}
+func startVM(vmid int) err                                          {}
+func stopVM(vmid int) err                                           {}
+func rebootVM(vmid int) err                                         {}
+func deleteVM(vmid int) err                                         {}
 func infoVM(vmid int) VMInstance                                    {}
-
 // Updates vm memory to the value passed as parameter
 func updateMemoryVM(memory int) VMInstance                          {}
-
 // Updates the number of cores to the value passed as parameter
 func updateCoresVM(cores int) VMInstance                            {}
-
 func listVMs() VMInstance[]                                         {}
 
 // Disk
 func createDisk(DiskSpec disk) Disk                   {}
 func infoDisk(int diskid) Disk                        {}
 func listDisk() Disk[]                                {}
-func deleteDisk(int diskid) bool                      {}
+func deleteDisk(int diskid) err                       {}
 // Extends `diskid` size by `size` (original size + `size`)
-func extendDisk(int diskid, unsigned int size) bool   {}
-func renameDisk(int diskid, string name) bool         {}
+func extendDisk(int diskid, unsigned int size) err    {}
+func renameDisk(int diskid, string name) err          {}
 
 // IP
 func createIP(int version) IPAddress {}
 func infoIP(int ipid) IPAddress      {}
 func listIP() IPAddress[]            {}
-func deleteIP(int ipid) bool         {}
+func deleteIP(int ipid) err          {}
 
 // Images
 func listImages(regionid int) DiskImages[]      {}
@@ -162,19 +164,20 @@ func imageByName(name string, regionid int) int {}
 
 // SSH
 func createKey(string name, string value) SSHKey      {}
-
+func deleteKey(string name) err                       {}
 // Get the key with name `name`
 func keyfromName(string name) SSHKey                  {}
+func listKeys() SSHKeys[]                             {}
 
 // Vlan
-func createVlan(VlanSpec) {}
-func infoVlan(int vlanid) {}
-func listVlan()           {}
-func updateVlanGW()       {}
-func renameVlan()         {}
+func createVlan(VlanSpec) Vlan {}
+func infoVlan(int vlanid) Vlan {}
+func listVlan() Vlan[]         {}
+func updateVlanGW() err        {}
+func renameVlan() err          {}
 
 // Regions
-func listRegions() {}
+func listRegions() Region[] {}
 }
 ```
 
