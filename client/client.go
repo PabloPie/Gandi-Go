@@ -6,9 +6,13 @@ import (
 	"github.com/kolo/xmlrpc"
 )
 
+const (
+	defaultV4URL = "https://rpc.gandi.net/xmlrpc/"
+)
+
 // V4Caller defines the methods a client for v4 of Gandi's API needs
 type V4Caller interface {
-	Call(method string, args interface{}, reply interface{}) error
+	Send(method string, args []interface{}, reply interface{}) error
 }
 
 // Clientv4 represents a wrapper for an xmlrpc client that also
@@ -19,13 +23,6 @@ type Clientv4 struct {
 
 	*xmlrpc.Client
 }
-
-type MockClientv4 struct {
-}
-
-const (
-	defaultV4URL = "https://rpc.gandi.net/xmlrpc/"
-)
 
 // NewClientv4 returns a client to connect to Gandi v4 xmlrpc API.
 // If no URL is provided ("") default value is used, an api key is mandatory.
@@ -45,16 +42,11 @@ func NewClientv4(URL string, APIKey string) (V4Caller, error) {
 	return Clientv4{APIKey, URL, client}, nil
 }
 
-func NewMockClientv4() (V4Caller, error) {
-	return MockClientv4{}, nil
-}
-
-// Call invokes the named function, waits for it to complete, and returns its error status.
-func (c Clientv4) Call(serviceMethod string, args interface{}, reply interface{}) error {
-	return c.Call(serviceMethod, args, reply)
-}
-
-func (MockClientv4) Call(serviceMethod string, args interface{}, reply interface{}) error {
-	// big switch for each serviceMethod
-	return nil
+// Send invokes the named function, waits for it to complete, and returns its error status.
+func (c Clientv4) Send(serviceMethod string, args []interface{}, reply interface{}) error {
+	params := []interface{}{c.APIKey}
+	if len(args) > 0 {
+		params = append(params, args...)
+	}
+	return c.Call(serviceMethod, params, reply)
 }
