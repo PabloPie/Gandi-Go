@@ -6,4 +6,7 @@ workflow "Go tests" {
 action "Golang test" {
   uses = "cedrickring/golang-action@1.2.0"
   args = "go get -t -v && go build && go test ./... -cover"
+  env = {
+    PROJECT_PATH = "./hosting"
+  }
 }
