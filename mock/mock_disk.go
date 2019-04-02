@@ -38,6 +38,48 @@ var diskimages = []hosting.DiskImage{
 	},
 }
 
+var disks = []hosting.Disk{
+	hosting.Disk{
+		ID:       1,
+		Name:     "sys_disk1",
+		Size:     10240,
+		RegionID: 4,
+		State:    "created",
+		Type:     "data",
+		VM:       []int{1},
+		BootDisk: true,
+	}, hosting.Disk{
+		ID:       4,
+		Name:     "sys_disk3",
+		Size:     10240,
+		RegionID: 4,
+		State:    "created",
+		Type:     "data",
+		VM:       []int{3},
+		BootDisk: true,
+	},
+	hosting.Disk{
+		ID:       2,
+		Name:     "sys_disk2",
+		Size:     20480,
+		RegionID: 3,
+		State:    "created",
+		Type:     "data",
+		VM:       []int{2},
+		BootDisk: true,
+	},
+	hosting.Disk{
+		ID:       3,
+		Name:     "disk3",
+		Size:     1024,
+		RegionID: 3,
+		State:    "created",
+		Type:     "data",
+		VM:       []int{2},
+		BootDisk: false,
+	},
+}
+
 // Disk functions
 func hostingDiskUpdate(args []interface{}, reply interface{}) error {
 	if len(args) != 2 {
@@ -77,38 +119,46 @@ func hostingDiskList(args []interface{}, reply interface{}) error {
 		return errors.New("list() takes 1 optional argument")
 	}
 	if len(args) == 0 {
-		// Do we keep a state or do we send random data?
-		disks := []hosting.Disk{
-			hosting.Disk{
-				ID:       1,
-				Name:     "sys_disk1",
-				Size:     10240,
-				RegionID: 3,
-				State:    "created",
-				Type:     "data",
-				VM:       []int{1},
-				BootDisk: true,
-			},
-			hosting.Disk{
-				ID:       2,
-				Name:     "sys_disk2",
-				Size:     20480,
-				RegionID: 3,
-				State:    "created",
-				Type:     "data",
-				VM:       []int{2},
-				BootDisk: true,
-			}}
 		setValue(disks, reply)
 		return nil
 	}
-	// else we send the disks filtered by args[0]
+	filter := reflect.ValueOf(args[0])
+	if filter.Kind() != reflect.Map {
+		return errors.New("Invalid method parameter: first agument must be a struct")
+	}
+	if filter.Len() == 0 {
+		setValue(disks, reply)
+		return nil
+	}
+
+	// vm_id == 2
+	// datacenter_id == 4
+	// name == disk3
+	// id == 1
+	keys := filter.MapKeys()
+	if len(keys) == 1 {
+		key := keys[0].Interface().(string)
+		switch key {
+		case "vm_id":
+			setValue(disks[2:], reply)
+		case "datacenter_id":
+			setValue(disks[:2], reply)
+		case "name":
+			setValue([]hosting.Disk{disks[3]}, reply)
+		case "id":
+			setValue([]hosting.Disk{disks[1]}, reply)
+		default:
+			return errors.New("Unknown key provided in filter")
+		}
+	} else {
+		setValue(disks, reply)
+	}
 	return nil
 }
 
 func hostingDiskCreate(args []interface{}, reply interface{}) error {
 	if len(args) < 1 {
-		return errors.New("create() takes 1 argument")
+		return errors.New("disk.create() takes 1 argument")
 	}
 	diskspec := reflect.ValueOf(args[0])
 	if diskspec.Kind() != reflect.Struct {
@@ -118,6 +168,7 @@ func hostingDiskCreate(args []interface{}, reply interface{}) error {
 	if !ok {
 		return errors.New("Struct provided is not a DiskSpec")
 	}
+
 	op := hosting.Operation{
 		DiskID: 1,
 		Step:   "WAIT",
@@ -129,7 +180,7 @@ func hostingDiskCreate(args []interface{}, reply interface{}) error {
 
 func hostingDiskCreateFrom(args []interface{}, reply interface{}) error {
 	if len(args) < 2 {
-		return errors.New("create_from() takes 2 argument")
+		return errors.New("disk.create_from() takes 2 argument")
 	}
 	srcdisk := reflect.ValueOf(args[1])
 	if srcdisk.Kind() != reflect.Int {
@@ -141,7 +192,7 @@ func hostingDiskCreateFrom(args []interface{}, reply interface{}) error {
 
 func hostingDiskDelete(args []interface{}, reply interface{}) error {
 	if len(args) != 1 {
-		return errors.New("delete() takes 1 argument")
+		return errors.New("disk.delete() takes 1 argument")
 	}
 	diskid := reflect.ValueOf(args[0])
 	if diskid.Kind() != reflect.Int {
@@ -157,18 +208,12 @@ func hostingDiskDelete(args []interface{}, reply interface{}) error {
 
 }
 
-// Pretty unsafe, add type checks at least
-func setValue(str interface{}, reply interface{}) {
-	replyPtrValue := reflect.ValueOf(reply)
-	replyValue := reflect.Indirect(replyPtrValue)
-	replyValue.Set(reflect.ValueOf(str))
-}
-
 // DiskImage functions
 func hostingImageList(args []interface{}, reply interface{}) error {
 	if len(args) > 1 {
-		return errors.New("list_images() takes 1 optional parameter")
+		return errors.New("image.list_images() takes 1 optional parameter")
 	}
+	// We always receive a struct, no need to verify args size
 	imagefilter := reflect.ValueOf(args[0])
 	if imagefilter.Kind() != reflect.Map {
 		return errors.New("Invalid method parameter: second argument must be a struct")
@@ -176,6 +221,7 @@ func hostingImageList(args []interface{}, reply interface{}) error {
 
 	if imagefilter.Len() == 0 {
 		setValue(diskimages, reply)
+		return nil
 	}
 
 	for _, e := range imagefilter.MapKeys() {
