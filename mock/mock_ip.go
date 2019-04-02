@@ -109,7 +109,7 @@ func hostingIPList(args []interface{}, reply interface{}) error {
 	}
 
 	if filter.Len() == 0 {
-		setValue(diskimages, reply)
+		setValue(ips, reply)
 	}
 
 	// version == 6
@@ -121,19 +121,19 @@ func hostingIPList(args []interface{}, reply interface{}) error {
 		key := keys[0].Interface().(string)
 		switch key {
 		case "version":
-			setValue([]hosting.Disk{disks[0], disks[2]}, reply)
+			setValue([]hosting.IPAddress{ips[0], ips[2]}, reply)
 		case "datacenter_id":
-			setValue([]hosting.Disk{disks[2]}, reply)
+			setValue([]hosting.IPAddress{ips[2]}, reply)
 		case "ip":
-			setValue([]hosting.Disk{disks[1]}, reply)
+			setValue([]hosting.IPAddress{ips[1]}, reply)
 		case "vm_id":
-			setValue(disks[:2], reply)
+			setValue(ips[:2], reply)
 		case "id":
 		default:
 			return errors.New("Unknown key provided in filter")
 		}
 	} else {
-		setValue(disks, reply)
+		setValue(ips, reply)
 	}
 	return nil
 }
