@@ -1,6 +1,8 @@
 package mock
 
 import (
+	"reflect"
+
 	"github.com/PabloPie/Gandi-Go/client"
 )
 
@@ -35,4 +37,11 @@ func NewMockClientv4() client.V4Caller {
 func (m Clientv4) Send(serviceMethod string, args []interface{}, reply interface{}) error {
 	err := funcs[serviceMethod](args, reply)
 	return err
+}
+
+// Pretty unsafe, add type checks at least
+func setValue(str interface{}, reply interface{}) {
+	replyPtrValue := reflect.ValueOf(reply)
+	replyValue := reflect.Indirect(replyPtrValue)
+	replyValue.Set(reflect.ValueOf(str))
 }
