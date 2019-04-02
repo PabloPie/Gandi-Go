@@ -28,3 +28,7 @@ type IPAddressSpec struct {
 	RegionID int    `xmlrpc:"datacenter_id"`
 	Version  string `xmlrpc:"ip_version"`
 }
+
+type Iface struct {
+	IPS []IPAddress `xmlrpc:"ips"`
+}
