@@ -30,5 +30,6 @@ type IPAddressSpec struct {
 }
 
 type Iface struct {
+	ID  int         `xmlrpc:"id"`
 	IPS []IPAddress `xmlrpc:"ips"`
 }
