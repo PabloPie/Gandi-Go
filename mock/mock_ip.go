@@ -4,7 +4,8 @@ import (
 	"errors"
 	"reflect"
 
-	"github.com/PabloPie/Gandi-Go/hosting"
+	"../hosting"
+	//"github.com/PabloPie/Gandi-Go/hosting"
 )
 
 var ips = []hosting.IPAddress{
@@ -12,7 +13,7 @@ var ips = []hosting.IPAddress{
 		ID:       1,
 		IP:       "2001:4b98:dc0:41:216:3eff:fe9b:1c39",
 		RegionID: 3,
-		Version:  "6",
+		Version:  6,
 		VM:       1,
 		State:    "created",
 	},
@@ -20,7 +21,7 @@ var ips = []hosting.IPAddress{
 		ID:       2,
 		IP:       "46.226.108.29",
 		RegionID: 3,
-		Version:  "4",
+		Version:  4,
 		VM:       1,
 		State:    "created",
 	},
@@ -28,24 +29,26 @@ var ips = []hosting.IPAddress{
 		ID:       3,
 		IP:       "2001:4b98:dc2:41:216:3eff:fea8:c071",
 		RegionID: 4,
-		Version:  "6",
+		Version:  6,
 		VM:       2,
 		State:    "created",
 	},
 }
 
 func hostingIfaceCreate(args []interface{}, reply interface{}) error {
-	if len(args) < 1 {
-		return errors.New("iface.create() takes 1 argument")
+	if len(args) < 2 {
+		return errors.New("iface.create() takes 2 arguments")
 	}
-	ifacespec := reflect.ValueOf(args[0])
-	if ifacespec.Kind() != reflect.Struct {
-		return errors.New("Invalid method parameter: first argument must be a struct")
+	regionid := reflect.ValueOf(args[0])
+	if ifacespec.Kind() != reflect.Int {
+		return errors.New("Invalid method parameter: first argument must be an integer")
 	}
-	_, ok := (ifacespec.Interface()).(hosting.IPAddressSpec)
-	if !ok {
-		return errors.New("Struct provided is not a IPAddressSpec")
+	
+	version := reflect.ValueOf(args[1])
+	if version.Kind() != reflect.Int {
+		return errors.New("Invalid method parameter: second argument must be an integer")
 	}
+
 	op := hosting.Operation{
 		IfaceID: 1,
 		Step:    "WAIT",
@@ -66,7 +69,7 @@ func hostingIfaceDelete(args []interface{}, reply interface{}) error {
 	op := hosting.Operation{
 		IfaceID: ifaceid.Interface().(int),
 		Step:    "WAIT",
-		Type:    "disk_delete",
+		Type:    "iface_delete",
 	}
 	setValue(op, reply)
 	return nil
