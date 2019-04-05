@@ -4,8 +4,7 @@ import (
 	"errors"
 	"reflect"
 
-	"../hosting"
-	//"github.com/PabloPie/Gandi-Go/hosting"
+	"github.com/PabloPie/Gandi-Go/hosting"
 )
 
 var ips = []hosting.IPAddress{
