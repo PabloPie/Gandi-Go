@@ -5,7 +5,7 @@ import (
 )
 
 // for a more readable code
-type IPVersion int 
+type IPVersion int
 
 const (
 	IPv4 IPVersion = 4
@@ -36,11 +36,16 @@ type IPFilter struct {
 	IP       string
 }
 
+type Iface struct {
+	ID int
+	IPS []IPAddress
+}
+
 func (h Hostingv4) CreateIP(regionid int, version IPVersion) ([]IPAddress, error) {
 	if version != IPv4 && version != IPv6 {
 		return nil, errors.New("Bad IP version")
 	}
-	
+
 	var err error
 
 	var response = Operation{}
@@ -49,14 +54,14 @@ func (h Hostingv4) CreateIP(regionid int, version IPVersion) ([]IPAddress, error
 	if err != nil {
 		return nil, err
 	}
-	
+
 	var ips = []IPAddress{}
 	parameters = map[string]interface{}{"iface_id": response.IfaceID}
 	err = h.Send("hosting.ip.list", []interface{}{parameters}, &ips)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// An IPv4 iface creates an IPv4 and an IPv6
 	// but IPv6 creation takes time...
 	if version == IPv4 && len(ips) != 2 {

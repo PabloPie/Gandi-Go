@@ -39,10 +39,10 @@ func hostingIfaceCreate(args []interface{}, reply interface{}) error {
 		return errors.New("iface.create() takes 2 arguments")
 	}
 	regionid := reflect.ValueOf(args[0])
-	if ifacespec.Kind() != reflect.Int {
+	if regionid.Kind() != reflect.Int {
 		return errors.New("Invalid method parameter: first argument must be an integer")
 	}
-	
+
 	version := reflect.ValueOf(args[1])
 	if version.Kind() != reflect.Int {
 		return errors.New("Invalid method parameter: second argument must be an integer")
