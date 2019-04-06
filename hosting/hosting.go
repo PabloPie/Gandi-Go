@@ -9,7 +9,7 @@ import (
 type Hosting interface {
 	// VMManager
 	DiskManager
-	// IPManager
+	IPManager
 	// SSHKeyManager
 	// VlanManager
 	// RegionManager

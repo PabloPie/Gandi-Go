@@ -112,6 +112,35 @@ func TestListDisksWithEmptyFilter(t *testing.T) {
 	}
 }
 
+func TestListDisksWithNameInFilter(t *testing.T) {
+	expectedname := "disk3"
+	disks, err := h.DescribeDisks(hosting.DiskFilter{Name: expectedname})
+	if err != nil {
+		t.Errorf("Error listing disks: %v", err)
+	}
+	if len(disks) != 1 {
+		t.Errorf("Error, expected to get 1 Disk and got %d instead", len(disks))
+	}
+	if disks[0].Name != expectedname {
+		t.Errorf("Error, expected to get Disk with name %s, got %s instead",
+			expectedname, disks[0].Name)
+	}
+}
+
+func TestListDisksWithVMIDInFilter(t *testing.T) {
+	expectedregionid := 4
+	disks, err := h.DescribeDisks(hosting.DiskFilter{RegionID: expectedregionid})
+	if err != nil {
+		t.Errorf("Error listing disks: %v", err)
+	}
+	for _, disk := range disks {
+		if disk.RegionID != expectedregionid {
+			t.Errorf("Error, expected to get Disk in region %d, got region %d instead",
+				expectedregionid, disk.RegionID)
+		}
+	}
+}
+
 func TestDeleteDisk(t *testing.T) {
 	disk := hosting.Disk{ID: 1}
 	err := h.DeleteDisk(&disk)
