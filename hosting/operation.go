@@ -21,14 +21,14 @@ type Operation struct {
 }
 
 func (h Hostingv4) waitForOp(op Operation) error {
-	var res = operationInfo{}
-	params := []interface{}{op}
+	res := operationInfo{}
+	params := []interface{}{op.ID}
 	err := h.Send("operation.info", params, &res)
 	if err != nil {
 		return err
 	}
 	for res.Status != "DONE" {
-		time.Sleep(5 * time.Second)
+		time.Sleep(2 * time.Second)
 		err := h.Send("operation.info", params, &res)
 		if err != nil {
 			return err
