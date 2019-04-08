@@ -7,8 +7,8 @@ import (
 // RegionManager represents a service capable of getting info
 // about Gandi Datacenters
 type RegionManager interface {
-	ListRegions() []Region
-	RegionbyCode(code string) Region
+	ListRegions() ([]Region, error)
+	RegionbyCode(code string) (Region, error)
 }
 
 // Region represents a Gandi datacenter

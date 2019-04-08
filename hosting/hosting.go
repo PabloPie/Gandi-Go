@@ -12,7 +12,7 @@ type Hosting interface {
 	IPManager
 	// SSHKeyManager
 	// VlanManager
-	// RegionManager
+	RegionManager
 	ImageManager
 }
 
