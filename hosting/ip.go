@@ -14,7 +14,7 @@ const (
 )
 
 type IPManager interface {
-	CreateIP(regionid int, version IPVersion) ([]IPAddress, error)
+	CreateIP(region Region, version IPVersion) (IPAddress, error)
 	DescribeIP(ipfilter IPFilter) ([]IPAddress, error)
 	DeleteIP(ipid int) error
 }
@@ -30,10 +30,10 @@ type IPAddress struct {
 }
 
 type IPFilter struct {
-	ID       int
-	RegionID int
-	Version  IPVersion
-	IP       string
+	ID       int       `xmlrpc:"id"`
+	RegionID int       `xmlrpc:"datacenter_id"`
+	Version  IPVersion `xmlrpc:"version"`
+	IP       string    `xmlrpc:"ip"`
 }
 
 type Iface struct {
@@ -41,39 +41,32 @@ type Iface struct {
 	IPS []IPAddress
 }
 
-func (h Hostingv4) CreateIP(regionid int, version IPVersion) ([]IPAddress, error) {
+func (h Hostingv4) CreateIP(region Region, version IPVersion) (IPAddress, error) {
+	var ip IPAddress
+	
 	if version != IPv4 && version != IPv6 {
-		return nil, errors.New("Bad IP version")
+		return ip, errors.New("Bad IP version")
 	}
 
 	var err error
 
 	var response = Operation{}
-	parameters := map[string]interface{}{"datacenter_id": regionid, "ip_version": int(version), "bandwidth" : defaultBandwidth}
-	err = h.Send("hosting.iface.create", []interface{}{parameters}, &response)
-	if err != nil {
-		return nil, err
+	err = h.Send("hosting.iface.create", []interface{} {
+					map[string]interface{} {
+						"datacenter_id": region.ID,
+						"ip_version": int(version),
+						"bandwidth" : defaultBandwidth,
+						}}, &response)
+	if err != nil{
+		return ip, err
+	}
+	if err = h.waitForOp(response) ; err != nil {
+		return ip, err
 	}
 
-	var ips = []IPAddress{}
-	parameters = map[string]interface{}{"iface_id": response.IfaceID}
-	err = h.Send("hosting.ip.list", []interface{}{parameters}, &ips)
-	if err != nil {
-		return nil, err
-	}
+	err = h.Send("hosting.ip.info", []interface{}{response.IPID}, &ip)
 
-	// An IPv4 iface creates an IPv4 and an IPv6
-	// but IPv6 creation takes time...
-	if version == IPv4 && len(ips) != 2 {
-		ips = append(ips, IPAddress{
-				Version : 6,
-				State : "being_created",
-				RegionID : regionid,
-				ifaceID : response.IfaceID,
-			})
-	}
-
-	return ips, err
+	return ip, err
 }
 
 func (h Hostingv4) DescribeIP(ipfilter IPFilter) ([]IPAddress, error) {
@@ -84,11 +77,8 @@ func (h Hostingv4) DescribeIP(ipfilter IPFilter) ([]IPAddress, error) {
 
 	var response = []IPAddress{}
 	err = h.Send("hosting.ip.list", []interface{}{ipmap}, &response)
-	if err != nil {
-		return nil, err
-	}
 
-	return response, nil
+	return response, err
 }
 
 func ipFilterToMap(ipfilter* IPFilter) (map[string]interface{}, error) {
@@ -111,13 +101,14 @@ func ipFilterToMap(ipfilter* IPFilter) (map[string]interface{}, error) {
 	return ipmap, nil
 }
 
-func (h Hostingv4) DeleteIP(ipid int) (err error) {
+func (h Hostingv4) DeleteIP(ipid int) error {
 	var response = Operation{}
-	err = h.Send("hosting.ip.info", []interface{}{ipid}, &response)
+	err := h.Send("hosting.ip.info", []interface{}{ipid}, &response)
 	if err != nil {
-		return
+		return err
 	}
 
 	err = h.Send("hosting.iface.delete", []interface{}{response.IfaceID}, &response)
-	return
+	
+	return h.waitForOp(response)
 }
