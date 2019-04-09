@@ -1,4 +1,4 @@
-package hosting
+package hostingv4
 
 import (
 	"fmt"
@@ -10,6 +10,7 @@ type operationInfo struct {
 	Status string `xmlrpc:"step"`
 }
 
+// Operation is an operation in Gandi v4 API
 type Operation struct {
 	ID      int    `xmlrpc:"id"`
 	VMID    int    `xmlrpc:"vm_id"`
