@@ -1,7 +1,6 @@
 package hostingv4
 
 import (
-	"fmt"
 	"reflect"
 	"testing"
 
@@ -26,40 +25,34 @@ func TestCreateDiskWithNameSizeAndRegion(t *testing.T) {
 	mockClient := mock.NewMockV4Caller(mockCtrl)
 	testHosting := Newv4Hosting(mockClient)
 
-	diskspec := DiskSpec{"4", diskname, uint(disksize)}
 	paramsDiskCreate := []interface{}{map[string]interface{}{
 		"datacenter_id": region,
 		"name":          diskname,
 		"size":          disksize,
 	}}
-	expectedResponseDiskCreate := Operation{
-		ID:      1,
-		VMID:    0,
-		DiskID:  1,
-		IfaceID: 0,
-		IPID:    0,
-		Step:    "WAIT",
-		Type:    "disk_create",
+	responseDiskCreate := Operation{
+		ID:     1,
+		DiskID: 1,
 	}
-	responseDiskCreate := Operation{}
-	// not setting responsediskcreate value
 	creation := mockClient.EXPECT().Send("hosting.disk.create",
-		paramsDiskCreate, &responseDiskCreate).SetArg(2, expectedResponseDiskCreate).Return(nil)
-
-	fmt.Println(responseDiskCreate)
+		paramsDiskCreate, gomock.Any()).SetArg(2, responseDiskCreate).Return(nil)
 
 	paramsOperationInfo := []interface{}{responseDiskCreate.ID}
-	expectedResponseWait := operationInfo{responseDiskCreate.ID, "DONE"}
-	responseWait := operationInfo{}
-
+	responseWait := operationInfo{responseDiskCreate.ID, "DONE"}
 	wait := mockClient.EXPECT().Send("operation.info",
-		paramsOperationInfo, &responseWait).SetArg(2, expectedResponseWait).Return(nil).After(creation)
+		paramsOperationInfo, gomock.Any()).SetArg(2, responseWait).Return(nil).After(creation)
 
-	paramsDiskInfo := []interface{}{expectedResponseDiskCreate.DiskID}
-	expectedResponseDiskInfo := diskv4{1, diskname, disksize, region, "created", "data", []int{}, false}
-	response := []diskv4{}
+	paramsDiskInfo := []interface{}{responseDiskCreate.DiskID}
+	responseDiskInfo := diskv4{1, diskname, disksize, region, "created", "data", []int{}, false}
 	mockClient.EXPECT().Send("hosting.disk.info",
-		paramsDiskInfo, &response).SetArg(2, expectedResponseDiskInfo).Return(nil).After(wait)
+		paramsDiskInfo, gomock.Any()).SetArg(2, responseDiskInfo).Return(nil).After(wait)
+
+	diskspec := DiskSpec{
+		RegionID: "4",
+		Name:     diskname,
+		Size:     uint(disksize),
+	}
+	disk, _ := testHosting.CreateDisk(diskspec)
 
 	expected := Disk{
 		ID:       "1",
@@ -70,8 +63,6 @@ func TestCreateDiskWithNameSizeAndRegion(t *testing.T) {
 		Type:     "data",
 		BootDisk: false,
 	}
-
-	disk, _ := testHosting.CreateDisk(diskspec)
 
 	if !reflect.DeepEqual(disk, expected) {
 		t.Errorf("Error, expected %+v, got instead %+v", expected, disk)
