@@ -60,12 +60,15 @@ func (h Hostingv4) CreateDisk(newDisk DiskSpec) (Disk, error) {
 	return h.diskFromID(response.DiskID)
 }
 
-// CreateDiskFromImage creates a disk with the same data as `srcDisk`. If `Size` is
-// not specified for `newDisk`, it will be created with size `srcDisk.Size`
+// CreateDiskFromImage creates a disk with the same data as `srcDisk`. If the size is
+// not specified for `newDisk`, it will be created with the size of the source disk `srcDisk`
 func (h Hostingv4) CreateDiskFromImage(newDisk DiskSpec, srcDisk DiskImage) (Disk, error) {
 	var fn = "CreateDiskFromImage"
 	if srcDisk.DiskID == "" {
 		return Disk{}, &HostingError{fn, "DiskImage", "DiskID", ErrNotProvided}
+	}
+	if srcDisk.RegionID != newDisk.RegionID {
+		return Disk{}, &HostingError{fn, "DiskSpec/DiskImage", "RegionID", ErrMismatch}
 	}
 
 	diskv4, err := toDiskSpecv4(newDisk)
@@ -270,6 +273,7 @@ func toDiskFilterv4(disk DiskFilter) (diskFilterv4, error) {
 		RegionID: region,
 		ID:       id,
 		VMID:     vmid,
+		Name:     disk.Name,
 	}, nil
 }
 

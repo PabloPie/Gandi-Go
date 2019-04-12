@@ -15,6 +15,11 @@ var ErrNotProvided = errors.New("Not provided")
 // usually coming from a string to integer conversion
 var ErrParse = errors.New("Parsing error")
 
+// ErrMismatch indicates that two values that should be equal are not,
+// for example when working when distinct objects that have to be in the
+// same datacenter
+var ErrMismatch = errors.New("Value mismatch")
+
 // A Hostingv4 contains an xmlrpc client to send requests to
 type Hostingv4 struct {
 	client.V4Caller
