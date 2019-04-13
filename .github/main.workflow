@@ -11,4 +11,3 @@ action "Golang test" {
   }
   secrets = ["CODECOV_TOKEN"]
 }
-
