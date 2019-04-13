@@ -4,9 +4,9 @@ package hosting
 type IPVersion int
 
 const (
-	IPv4 IPVersion = 4
-	IPv6 IPVersion = 6
-	DefaultBandwidth float32 = 102400.0
+	IPv4             IPVersion = 4
+	IPv6             IPVersion = 6
+	DefaultBandwidth float32   = 102400.0
 )
 
 // IPManager represents a service capable of manipulating Gandi IPs
