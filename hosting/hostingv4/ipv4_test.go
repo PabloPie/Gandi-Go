@@ -35,6 +35,8 @@ var regions = []Region{
 	Region{ID: "789", Name: "Centro de datos 789", Country: "Espana"},
 }
 
+/* CreateIP */
+
 func TestCreateIPv6(t *testing.T) {
 	testCreateIP(t, hosting.IPv6, "fe80::DEAD:BABE:DEAD:BEEF", regions[1])
 }
@@ -107,6 +109,43 @@ func TestCreateIPbadVersion(t *testing.T) {
 	}
 }
 
+func TestCreateIPCreationFailed(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockClient := mock.NewMockV4Caller(mockCtrl)
+	testHosting := Newv4Hosting(mockClient)
+
+	myOp := Operation{ID: 212, IPID: 99}
+	region := regions[0]
+	version := hosting.IPv4
+	regionIdInt, _ := strconv.Atoi(region.ID)
+
+	creation := mockClient.EXPECT().Send("hosting.iface.create",
+		[]interface{}{map[string]interface{}{
+			"datacenter_id": regionIdInt,
+			"ip_version":    int(version),
+			"bandwidth":     hosting.DefaultBandwidth,
+		}},
+		gomock.Any()).SetArg(2, myOp).Return(nil)
+
+	wait1 := mockClient.EXPECT().Send("operation.info",
+		[]interface{}{myOp.ID},
+		gomock.Any()).SetArg(2, operationInfo{myOp.ID, "WAIT"}).Return(nil).After(creation)
+	
+	mockClient.EXPECT().Send("operation.info",
+		[]interface{}{myOp.ID},
+		gomock.Any()).SetArg(2, operationInfo{myOp.ID, "ERROR"}).Return(nil).After(wait1)
+
+	_, err := testHosting.CreateIP(region, version)
+
+	expected := errors.New("Bad operation status for 212 : ERROR")
+	if !reflect.DeepEqual(err, expected) {
+		t.Errorf("Error, expected %+v, got instead %+v", expected, err)
+	}
+}
+
+/* DeleteIP */
+
 func TestDeleteIP(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
@@ -136,6 +175,8 @@ func TestDeleteIP(t *testing.T) {
 		t.Errorf("Error, expected %+v, got instead %+v", nil, err)
 	}
 }
+
+/* DescribeIP */
 
 func TestDescribeAllIP(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
