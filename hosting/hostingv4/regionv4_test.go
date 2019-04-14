@@ -1,9 +1,9 @@
 package hostingv4
 
 import (
+	"errors"
 	"reflect"
 	"testing"
-	"errors"
 
 	"github.com/PabloPie/Gandi-Go/mock"
 	"github.com/golang/mock/gomock"
@@ -17,13 +17,12 @@ var regionsv4 = []regionv4{
 	regionv4{ID: 90, Name: "ES-CD4", Country: "Espana"},
 }
 
-
 func TestListRegions(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 	mockClient := mock.NewMockV4Caller(mockCtrl)
 	testHosting := Newv4Hosting(mockClient)
-	
+
 	mockClient.EXPECT().Send("hosting.datacenter.list",
 		[]interface{}{},
 		gomock.Any()).SetArg(2, regionsv4).Return(nil)
@@ -32,7 +31,7 @@ func TestListRegions(t *testing.T) {
 	for _, r := range regionsv4 {
 		expected = append(expected, fromRegionv4(r))
 	}
-	
+
 	regionsresult, _ := testHosting.ListRegions()
 
 	if !reflect.DeepEqual(expected, regionsresult) {
@@ -65,7 +64,7 @@ func testRegionByCode(t *testing.T, code string) (Region, error) {
 	defer mockCtrl.Finish()
 	mockClient := mock.NewMockV4Caller(mockCtrl)
 	testHosting := Newv4Hosting(mockClient)
-	
+
 	var theRegion []regionv4
 	for _, r := range regionsv4 {
 		if r.Name == code {
@@ -73,7 +72,7 @@ func testRegionByCode(t *testing.T, code string) (Region, error) {
 			break
 		}
 	}
-	
+
 	mockClient.EXPECT().Send("hosting.datacenter.list",
 		[]interface{}{map[string]string{"dc_code": code}},
 		gomock.Any()).SetArg(2, theRegion).Return(nil)

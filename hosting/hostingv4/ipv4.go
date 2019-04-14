@@ -94,7 +94,7 @@ func (h Hostingv4) DeleteIP(ipid string) error {
 // Internal methods to convert Hosting structures to v4 structures
 
 func ipFilterToMap(ipfilter *IPFilter) (map[string]interface{}, error) {
-	var ipmap map[string]interface{}
+	ipmap := make(map[string]interface{})
 	var err error
 
 	if ipfilter.Version != 0 {
