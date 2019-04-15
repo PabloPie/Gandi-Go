@@ -6,7 +6,7 @@ type Hosting interface {
 	// VMManager
 	DiskManager
 	IPManager
-	// SSHKeyManager
+	SSHKeyManager
 	// VlanManager
 	RegionManager
 	ImageManager

@@ -9,7 +9,8 @@ type SSHKeyManager interface {
 }
 
 type SSHKey struct {
-	id    int
-	name  string
-	value string
+	Fingerprint string
+	ID          string
+	Name        string
+	Value       string
 }
