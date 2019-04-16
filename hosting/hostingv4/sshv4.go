@@ -8,8 +8,8 @@ import (
 
 type SSHKey = hosting.SSHKey
 
-// Do we actually need this? the xmlrpc lib takes the name of a field if
-// there is no tag
+// sshkeyv4 represents an sshkey in v4, the only difference is the
+// ID that is represented by an int in v4
 type sshkeyv4 struct {
 	Fingerprint string `xmlrpc:"fingerprint"`
 	ID          int    `xmlrpc:"id"`
@@ -33,6 +33,7 @@ func (h Hostingv4) CreateKey(name string, value string) (SSHKey, error) {
 	return h.keyFromID(response.ID), nil
 }
 
+// DeleteKey deletes de SSH Key provided as argument
 func (h Hostingv4) DeleteKey(key SSHKey) error {
 	id, err := strconv.Atoi(key.ID)
 	if err != nil {
@@ -47,7 +48,8 @@ func (h Hostingv4) DeleteKey(key SSHKey) error {
 	return err
 }
 
-func (h Hostingv4) KeyfromName(name string) SSHKey {
+// KeyFromName returns the key associated with the name passed as argument
+func (h Hostingv4) KeyFromName(name string) SSHKey {
 	params := []interface{}{
 		map[string]string{
 			"name": name,
@@ -60,6 +62,7 @@ func (h Hostingv4) KeyfromName(name string) SSHKey {
 	return h.keyFromID(response[0].ID)
 }
 
+// ListKeys lists every available key, without the corresponding values
 func (h Hostingv4) ListKeys() []SSHKey {
 	response := []sshkeyv4{}
 	_ = h.Send("hosting.ssh.list", []interface{}{}, &response)
@@ -71,6 +74,7 @@ func (h Hostingv4) ListKeys() []SSHKey {
 	return keys
 }
 
+// keyFromID is an internal function to get a general SSHKey from a v4 ID
 func (h Hostingv4) keyFromID(id int) SSHKey {
 	params := []interface{}{id}
 	response := sshkeyv4{}
@@ -78,6 +82,7 @@ func (h Hostingv4) keyFromID(id int) SSHKey {
 	return toSSHKey(response)
 }
 
+// toSSHKey transforms a v4 SSHKey to a generic one
 func toSSHKey(key sshkeyv4) SSHKey {
 	return SSHKey{
 		ID:          strconv.Itoa(key.ID),
