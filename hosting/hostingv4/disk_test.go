@@ -198,6 +198,27 @@ func TestListDiskWithNameInFilter(t *testing.T) {
 	}
 }
 
+func TestDiskFromName(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockClient := mock.NewMockV4Caller(mockCtrl)
+	testHosting := Newv4Hosting(mockClient)
+
+	paramsDiskInfo := []interface{}{map[string]interface{}{
+		"name": diskname,
+	}}
+	responseDiskInfo := disks[4:]
+	mockClient.EXPECT().Send("hosting.disk.list",
+		paramsDiskInfo, gomock.Any()).SetArg(2, responseDiskInfo).Return(nil)
+
+	disk := testHosting.DiskFromName(diskname)
+
+	if disk.Name != diskname {
+		t.Errorf("Error, expected to get Disk with name '%s', got '%s' instead",
+			diskname, disks[0].Name)
+	}
+}
+
 func TestDeleteDisk(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()

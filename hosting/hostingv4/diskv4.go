@@ -99,12 +99,12 @@ func (h Hostingv4) ListDisks() ([]Disk, error) {
 	return h.DescribeDisks(DiskFilter{})
 }
 
-// DiskFromID is a helper function to get a Disk given its ID,
+// DiskFromName is a helper function to get a Disk given its name,
 // if the vm does not exist or an error ocurred it returns an empty Disk,
 // use DescribeDisks with an appropriate DiskFilter to get more details
 // on the possible errors
-func (h Hostingv4) DiskFromID(id string) Disk {
-	disks, err := h.DescribeDisks(DiskFilter{ID: id})
+func (h Hostingv4) DiskFromName(name string) Disk {
+	disks, err := h.DescribeDisks(DiskFilter{Name: name})
 	if err != nil || len(disks) < 1 {
 		return Disk{}
 	}
@@ -230,7 +230,7 @@ func (h Hostingv4) diskFromID(id int) (Disk, error) {
 
 // Conversion functions for Disks in Gandi v4
 
-// toDiskFilterv4 converts a Hosting DiskSpec to a v4 DiskSpec
+// toDiskFilterv4 casts a Hosting DiskSpec to a v4 DiskSpec
 func toDiskSpecv4(disk DiskSpec) (diskSpecv4, error) {
 	region, err := strconv.Atoi(disk.RegionID)
 	if err != nil {
@@ -243,7 +243,7 @@ func toDiskSpecv4(disk DiskSpec) (diskSpecv4, error) {
 	}, nil
 }
 
-// isIgnorableErr return true if an Atoi conversion error is caused
+// isIgnorableErr returns true if an Atoi conversion error is caused
 // by a bad string format (ErrSyntax) or there is no error
 func isIgnorableErr(err error) bool {
 	if err != nil {
