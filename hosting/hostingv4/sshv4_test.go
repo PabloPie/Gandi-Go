@@ -118,7 +118,7 @@ func TestKeyFromName(t *testing.T) {
 		Fingerprint: fingerprint,
 		Value:       keyvalue,
 	}
-	key := testHosting.KeyfromName(keyname)
+	key := testHosting.KeyFromName(keyname)
 
 	if key != expectedKey {
 		t.Errorf("Error, expected Key %+v, got instead %+v", expectedKey, key)
