@@ -5,7 +5,7 @@ type DiskManager interface {
 	CreateDisk(disk DiskSpec) (Disk, error)
 	CreateDiskFromImage(disk DiskSpec, src DiskImage) (Disk, error)
 	ListDisks() ([]Disk, error)
-	DiskFromID(id string) Disk
+	DiskFromName(name string) Disk
 	DescribeDisks(diskFilter DiskFilter) ([]Disk, error)
 	DeleteDisk(disk Disk) error
 	ExtendDisk(disk Disk, size uint) (Disk, error)
