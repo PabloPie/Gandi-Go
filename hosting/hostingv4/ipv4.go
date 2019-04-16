@@ -21,6 +21,13 @@ type iPAddressv4 struct {
 	State    string `xmlrpc:"state"`
 }
 
+type iface struct {
+	IPs      []iPAddressv4 `xmlrpc:"ips"`
+	RegionID int           `xmlrpc:"datacenter_id"`
+	ID       int           `xmlrpc:"id"`
+	VMID     int           `xmlrpc:"vm_id`
+}
+
 func (h Hostingv4) CreateIP(region Region, version hosting.IPVersion) (IPAddress, error) {
 	if version != hosting.IPv4 && version != hosting.IPv6 {
 		return IPAddress{}, errors.New("Bad IP version")
@@ -89,6 +96,15 @@ func (h Hostingv4) DeleteIP(ipid string) error {
 	err = h.Send("hosting.iface.delete", []interface{}{response.IfaceID}, &response)
 
 	return h.waitForOp(response)
+}
+
+func (h Hostingv4) ifaceIDFromIPID(ipid int) (int, error) {
+	response := Operation{}
+	err := h.Send("hosting.ip.info", []interface{}{ipid}, &response)
+	if err != nil {
+		return 0, err
+	}
+	return response.IfaceID, nil
 }
 
 // Internal methods to convert Hosting structures to v4 structures

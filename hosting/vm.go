@@ -6,60 +6,57 @@ import "time"
 // implemented by VM!
 type VMManager interface {
 	//Creates vm with a new disk of size `size` based on diskimage vm.image
-	CreateVMD(vm VMSpec, size int) (VM, Disk, IPAddress, error)
+	// CreateVM(vm VMSpec, image DiskImage, version IPVersion, diskSize uint) (VM, Disk, IPAddress, error)
+	// CreateVMWithExistingIP(vm VMSpec, image DiskImage, ip IPAddress, diskSize uint) (VM, Disk, IPAddress, error)
+	// CreateVMWithExistingDisk(vm VMSpec, version IPVersion, disk Disk) (VM, Disk, IPAddress, error)
+	CreateVMWithExistingDiskAndIP(vm VMSpec, ip IPAddress, disk Disk) (VM, IPAddress, Disk, error)
 
 	//Creates vm using an already existing bootable disk as system disk
-	CreateVM(vm VMSpec, disk *Disk) (VM, IPAddress, error)
-
-	AttachDisk(vm *VM, disk *Disk) error
-	DetachDisk(vm *VM, disk *Disk) error
-	AttachIP(vm *VM, ip *IPAddress) error
-	DetachIP(vm *VM, ip *IPAddress) error
+	// AttachDisk(vm VM, disk Disk) (VM, Disk, error)
+	// DetachDisk(vm VM, disk Disk) (VM, Disk, error)
+	// AttachIP(vm VM, ip IPAddress) (VM, IPAddress, error)
+	// DetachIP(vm VM, ip IPAddress) (VM, IPAddress, error)
 
 	// Operations on VM state
-	StartVM(vm *VM) error
-	StopVM(vm *VM) error
-	RebootVM(vm *VM) error
-	DeleteVM(vm *VM) error
+	// StartVM(vm VM) error
+	// StopVM(vm VM) error
+	// RebootVM(vm VM) error
+	// DeleteVM(vm VM) error
 
 	// filter function? currently this function is of no use
-	InfoVM(vmid int) (VM, error)
+	// DescribeVMs(vmid int) ([]VM, error)
+	// ListVMs() ([]VM, error)
+
 	// Updates vm memory to the value passed as parameter
-	UpdateMemoryVM(vm *VM, memory int) error
-
+	// UpdateMemoryVM(vm *VM, memory int) error
 	// Updates the number of cores to the value passed as parameter
-	UpdateCoresVM(vm *VM, cores int) error
-
-	ListVMs() ([]VM, error)
+	// UpdateCoresVM(vm *VM, cores int) error
 }
 
-// VM represents a virtual machine, in any version of the API
+// VM represents a virtual machine
 type VM struct {
-	ID           int
-	Hostname     string
-	DatacenterID int
-	Farm         string
-	Description  string
-	Cores        int
-	Memory       int
-	DateCreated  time.Time
-	Ips          []IPAddress
-	Disks        []Disk
-	SSHKeys      []string
-	State        string
+	ID          string
+	Hostname    string
+	RegionID    string
+	Farm        string
+	Description string
+	Cores       int
+	Memory      int
+	DateCreated time.Time
+	Ips         []IPAddress
+	Disks       []Disk
+	SSHKeysID   []string
+	State       string
 }
 
-// Export struct or provide function to generate struct?
-// VMSpec is used in v4 of the API for vm creation
+// VMSpec gives the options available to create a VM
 type VMSpec struct {
-	RegionID  int
+	RegionID  string
 	Hostname  string
 	Farm      string
 	Memory    int
 	Cores     int
-	IPVersion int
-	Image     DiskImage
-	SSHKey    string
+	SSHKeysID []string
 	Login     string
 	Password  string
 }

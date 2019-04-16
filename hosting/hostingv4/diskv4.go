@@ -1,6 +1,7 @@
 package hostingv4
 
 import (
+	"log"
 	"strconv"
 
 	"github.com/PabloPie/Gandi-Go/hosting"
@@ -83,6 +84,7 @@ func (h Hostingv4) CreateDiskFromImage(newDisk DiskSpec, srcDisk DiskImage) (Dis
 
 	response := Operation{}
 	params := []interface{}{disk, imageid}
+	log.Printf("Creating Disk %s...", newDisk.Name)
 	err = h.Send("hosting.disk.create_from", params, &response)
 	if err != nil {
 		return Disk{}, err
@@ -91,6 +93,7 @@ func (h Hostingv4) CreateDiskFromImage(newDisk DiskSpec, srcDisk DiskImage) (Dis
 		return Disk{}, err
 	}
 
+	log.Printf("Disk %s(ID: %d) created!", newDisk.Name, response.DiskID)
 	return h.diskFromID(response.DiskID)
 }
 
