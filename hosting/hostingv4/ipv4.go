@@ -25,7 +25,7 @@ type iface struct {
 	IPs      []iPAddressv4 `xmlrpc:"ips"`
 	RegionID int           `xmlrpc:"datacenter_id"`
 	ID       int           `xmlrpc:"id"`
-	VMID     int           `xmlrpc:"vm_id`
+	VMID     int           `xmlrpc:"vm_id"`
 }
 
 func (h Hostingv4) CreateIP(region Region, version hosting.IPVersion) (IPAddress, error) {
@@ -99,12 +99,23 @@ func (h Hostingv4) DeleteIP(ipid string) error {
 }
 
 func (h Hostingv4) ifaceIDFromIPID(ipid int) (int, error) {
+	// An operation already contains a field for iface_id
+	// we avoid defining a new struct
 	response := Operation{}
 	err := h.Send("hosting.ip.info", []interface{}{ipid}, &response)
 	if err != nil {
 		return 0, err
 	}
 	return response.IfaceID, nil
+}
+
+func (h Hostingv4) ipFromID(ipid int) (IPAddress, error) {
+	response := iPAddressv4{}
+	err := h.Send("hosting.ip.info", []interface{}{ipid}, &response)
+	if err != nil {
+		return IPAddress{}, err
+	}
+	return toIPAddress(response), nil
 }
 
 // Internal methods to convert Hosting structures to v4 structures

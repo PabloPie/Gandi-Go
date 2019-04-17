@@ -11,21 +11,20 @@ type VMManager interface {
 	// CreateVMWithExistingDisk(vm VMSpec, version IPVersion, disk Disk) (VM, Disk, IPAddress, error)
 	CreateVMWithExistingDiskAndIP(vm VMSpec, ip IPAddress, disk Disk) (VM, IPAddress, Disk, error)
 
-	//Creates vm using an already existing bootable disk as system disk
-	// AttachDisk(vm VM, disk Disk) (VM, Disk, error)
-	// DetachDisk(vm VM, disk Disk) (VM, Disk, error)
-	// AttachIP(vm VM, ip IPAddress) (VM, IPAddress, error)
-	// DetachIP(vm VM, ip IPAddress) (VM, IPAddress, error)
+	AttachDisk(vm VM, disk Disk) (VM, Disk, error)
+	DetachDisk(vm VM, disk Disk) (VM, Disk, error)
+	AttachIP(vm VM, ip IPAddress) (VM, IPAddress, error)
+	DetachIP(vm VM, ip IPAddress) (VM, IPAddress, error)
 
 	// Operations on VM state
-	// StartVM(vm VM) error
-	// StopVM(vm VM) error
-	// RebootVM(vm VM) error
-	// DeleteVM(vm VM) error
+	StartVM(vm VM) error
+	StopVM(vm VM) error
+	RebootVM(vm VM) error
+	DeleteVM(vm VM) error
 
-	// filter function? currently this function is of no use
-	// DescribeVMs(vmid int) ([]VM, error)
-	// ListVMs() ([]VM, error)
+	VMFromName(name string) VM
+	DescribeVM(vmfilter VMFilter) ([]VM, error)
+	ListVMs() ([]VM, error)
 
 	// Updates vm memory to the value passed as parameter
 	// UpdateMemoryVM(vm *VM, memory int) error
@@ -59,4 +58,12 @@ type VMSpec struct {
 	SSHKeysID []string
 	Login     string
 	Password  string
+}
+
+type VMFilter struct {
+	RegionID string
+	Farm     string
+	Hostname string
+	ID       string
+	State    string
 }
