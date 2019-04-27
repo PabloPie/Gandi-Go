@@ -82,14 +82,14 @@ func (h Hostingv4) DescribeIP(ipfilter IPFilter) ([]IPAddress, error) {
 	return ips, nil
 }
 
-func (h Hostingv4) DeleteIP(ipid string) error {
-	ipid_int, err := strconv.Atoi(ipid)
+func (h Hostingv4) DeleteIP(ip IPAddress) error {
+	ipid, err := strconv.Atoi(ip.ID)
 	if !isIgnorableErr(err) {
 		return internalParseError("(none)", "ipid")
 	}
 
 	var response = Operation{}
-	err = h.Send("hosting.ip.info", []interface{}{ipid_int}, &response)
+	err = h.Send("hosting.ip.info", []interface{}{ipid}, &response)
 	if err != nil {
 		return err
 	}

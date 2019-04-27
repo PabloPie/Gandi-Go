@@ -131,7 +131,7 @@ func TestCreateIPCreationFailed(t *testing.T) {
 	wait1 := mockClient.EXPECT().Send("operation.info",
 		[]interface{}{myOp.ID},
 		gomock.Any()).SetArg(2, operationInfo{myOp.ID, "WAIT"}).Return(nil).After(creation)
-	
+
 	mockClient.EXPECT().Send("operation.info",
 		[]interface{}{myOp.ID},
 		gomock.Any()).SetArg(2, operationInfo{myOp.ID, "ERROR"}).Return(nil).After(wait1)
@@ -169,7 +169,7 @@ func TestDeleteIP(t *testing.T) {
 		[]interface{}{opWait.ID},
 		gomock.Any()).SetArg(2, operationInfo{opWait.ID, "DONE"}).Return(nil).After(delete)
 
-	err := testHosting.DeleteIP(ip.ID)
+	err := testHosting.DeleteIP(ip)
 
 	if !reflect.DeepEqual(nil, err) {
 		t.Errorf("Error, expected %+v, got instead %+v", nil, err)
