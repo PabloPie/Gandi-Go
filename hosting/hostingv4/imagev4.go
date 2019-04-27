@@ -87,6 +87,6 @@ func fromDiskImagev4(image diskImagev4) DiskImage {
 		DiskID:   diskid,
 		RegionID: regionid,
 		Name:     image.Name,
-		Size:     uint(image.Size),
+		Size:     image.Size / 1024,
 	}
 }
