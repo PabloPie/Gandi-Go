@@ -8,7 +8,7 @@ type VMManager interface {
 	//Creates vm with a new disk of size `size` based on diskimage vm.image
 	// CreateVM(vm VMSpec, image DiskImage, version IPVersion, diskSize uint) (VM, Disk, IPAddress, error)
 	// CreateVMWithExistingIP(vm VMSpec, image DiskImage, ip IPAddress, diskSize uint) (VM, Disk, IPAddress, error)
-	// CreateVMWithExistingDisk(vm VMSpec, version IPVersion, disk Disk) (VM, Disk, IPAddress, error)
+	CreateVMWithExistingDisk(vm VMSpec, version IPVersion, disk Disk) (VM, IPAddress, Disk, error)
 	CreateVMWithExistingDiskAndIP(vm VMSpec, ip IPAddress, disk Disk) (VM, IPAddress, Disk, error)
 
 	AttachDisk(vm VM, disk Disk) (VM, Disk, error)

@@ -52,31 +52,11 @@ type vmFilterv4 struct {
 // that is, their IDs already exist. All 3 objects must reside in the same Region.
 // `VMSpec.RegionID` is the only mandatory parameter for the VM.
 func (h Hostingv4) CreateVMWithExistingDiskAndIP(vm VMSpec, ip IPAddress, disk Disk) (VM, IPAddress, Disk, error) {
-	var fn = "CreateVMWithExistingDiskAndIP"
-	if vm.RegionID == "" {
-		return VM{}, IPAddress{}, Disk{}, &HostingError{fn, "VMSpec", "RegionID", ErrNotProvided}
-	}
-	if vm.RegionID != disk.RegionID || vm.RegionID != ip.RegionID {
-		return VM{}, IPAddress{}, Disk{}, &HostingError{fn, "VMSpec/IPAddress/Disk", "RegionID", ErrMismatch}
-	}
-	if disk.ID == "" || ip.ID == "" {
-		return VM{}, IPAddress{}, Disk{}, &HostingError{fn, "Disk/IPAddress", "ID", ErrNotProvided}
-	}
-
-	// Parsing and casting to v4 structs
-	vmspec, err := toVMSpecv4(vm)
+	vmspecmap, diskid, ipid, err := h.checkParametersAndGetVMSpecMap("CreateVMWithExistingDiskAndIP", vm, ip, true, disk, true)
 	if err != nil {
 		return VM{}, IPAddress{}, Disk{}, err
 	}
-	vmspecmap, _ := structToMap(vmspec)
-	diskid, err := strconv.Atoi(disk.ID)
-	if err != nil {
-		return VM{}, IPAddress{}, Disk{}, internalParseError("Disk", "ID")
-	}
-	ipid, err := strconv.Atoi(ip.ID)
-	if err != nil {
-		return VM{}, IPAddress{}, Disk{}, internalParseError("IP", "ID")
-	}
+
 	// call api to get the iface id that corresponds to the ip
 	ifaceid, err := h.ifaceIDFromIPID(ipid)
 	if err != nil {
@@ -86,19 +66,38 @@ func (h Hostingv4) CreateVMWithExistingDiskAndIP(vm VMSpec, ip IPAddress, disk D
 	vmspecmap["sys_disk_id"] = diskid
 
 	// Call API, Disk and IP already exist, only one operation is returned
-	log.Printf("Creating VM %s...", vm.Hostname)
-	request := []interface{}{vmspecmap}
-	response := []Operation{}
-	err = h.Send("hosting.vm.create", request, &response)
+	vmid, err := h.createVMFromVMSpecMap(vmspecmap)
 	if err != nil {
 		return VM{}, IPAddress{}, Disk{}, err
 	}
-	if err = h.waitForOp(response[0]); err != nil {
+
+	vmRes, err := h.vmFromID(vmid)
+	if err != nil {
 		return VM{}, IPAddress{}, Disk{}, err
 	}
-	log.Printf("VM %s(ID: %d) created!", vm.Hostname, response[0].VMID)
+	return vmRes, vmRes.Ips[0], vmRes.Disks[0], nil
+}
 
-	vmRes, err := h.vmFromID(response[0].VMID)
+// CreateVMWithExistingDisk creates a VM from a VMSpec if a valid Disk is given,
+// The disk must reside in the same Region as the VM and an IP address
+// will be created in this region.
+// `VMSpec.RegionID` is the only mandatory parameter for the VM.
+func (h Hostingv4) CreateVMWithExistingDisk(vm VMSpec, version hosting.IPVersion, disk Disk) (VM, IPAddress, Disk, error) {
+	vmspecmap, diskid, _, err := h.checkParametersAndGetVMSpecMap("CreateVMWithExistingDisk", vm, IPAddress{}, false, disk, true)
+	if err != nil {
+		return VM{}, IPAddress{}, Disk{}, err
+	}
+
+	vmspecmap["sys_disk_id"] = diskid
+	vmspecmap["ip_version"] = int(version)
+	vmspecmap["bandwidth"] = hosting.DefaultBandwidth
+
+	vmid, err := h.createVMFromVMSpecMap(vmspecmap)
+	if err != nil {
+		return VM{}, IPAddress{}, Disk{}, err
+	}
+
+	vmRes, err := h.vmFromID(vmid)
 	if err != nil {
 		return VM{}, IPAddress{}, Disk{}, err
 	}
@@ -109,7 +108,6 @@ func (h Hostingv4) CreateVMWithExistingDiskAndIP(vm VMSpec, ip IPAddress, disk D
 func (h Hostingv4) AttachDisk(vm VM, disk Disk) (VM, Disk, error) {
 	var fn = "disk_attach"
 	return h.diskAttachDetach(vm, disk, fn)
-
 }
 
 // DetachDisk detaches a Disk from a VM, will fail if it is a boot Disk
@@ -301,6 +299,71 @@ func (h Hostingv4) vmFromID(vmid int) (VM, error) {
 	}
 	vm := fromVMv4(response)
 	return vm, nil
+}
+
+// Internal functions for creation
+
+func (h Hostingv4) checkParametersAndGetVMSpecMap(fn string, vm VMSpec, ip IPAddress, checkIP bool, disk Disk, checkDisk bool) (map[string]interface{}, int, int, error) {
+	var ipid int
+	var diskid int
+	var err error
+
+	if vm.RegionID == "" {
+		return map[string]interface{}{}, diskid, ipid, &HostingError{fn, "VMSpec", "RegionID", ErrNotProvided}
+	}
+
+	if checkDisk {
+		if vm.RegionID != disk.RegionID {
+			return map[string]interface{}{}, diskid, ipid, &HostingError{fn, "VMSpec/Disk", "RegionID", ErrMismatch}
+		}
+		if disk.ID == "" {
+			return map[string]interface{}{}, diskid, ipid, &HostingError{fn, "Disk", "ID", ErrNotProvided}
+		}
+		diskid, err = strconv.Atoi(disk.ID)
+		if err != nil {
+			return map[string]interface{}{}, diskid, ipid, internalParseError("Disk", "ID")
+		}
+	}
+
+	if checkIP {
+		if vm.RegionID != ip.RegionID {
+			return map[string]interface{}{}, diskid, ipid, &HostingError{fn, "VMSpec/IPAddress", "RegionID", ErrMismatch}
+		}
+		if ip.ID == "" {
+			return map[string]interface{}{}, diskid, ipid, &HostingError{fn, "IPAddress", "ID", ErrNotProvided}
+		}
+		ipid, err = strconv.Atoi(ip.ID)
+		if err != nil {
+			return map[string]interface{}{}, diskid, ipid, internalParseError("IPAddress", "ID")
+		}
+	}
+
+	vmspec, err := toVMSpecv4(vm)
+	if err != nil {
+		return map[string]interface{}{}, diskid, ipid, err
+	}
+
+	vmspecmap, err := structToMap(vmspec)
+	return vmspecmap, diskid, ipid, err
+}
+
+func (h Hostingv4) createVMFromVMSpecMap(vmspecmap map[string]interface{}) (int, error) {
+	log.Printf("Creating VM %s...", vmspecmap["hostname"])
+	request := []interface{}{vmspecmap}
+	response := []Operation{}
+	if err := h.Send("hosting.vm.create", request, &response); err != nil {
+		return -1, err
+	}
+
+	for _, op := range response {
+		if err := h.waitForOp(op); err != nil {
+			return -1, err
+		}
+	}
+
+	log.Printf("VM %s(ID: %d) created!", vmspecmap["hostname"], response[0].VMID)
+
+	return response[0].VMID, nil
 }
 
 // Internal functions for type conversion
