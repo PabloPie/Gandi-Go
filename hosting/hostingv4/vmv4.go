@@ -160,7 +160,8 @@ func (h Hostingv4) CreateVM(vm VMSpec, image DiskImage, version hosting.IPVersio
 		RegionID: vmspecmap["datacenter_id"].(int),
 		Size:     int(diskSize) * 1024,
 	}
-	params := []interface{}{vmspecmap, diskspec, imageid}
+	diskparam, _ := structToMap(diskspec)
+	params := []interface{}{vmspecmap, diskparam, imageid}
 	response := []Operation{}
 	err = h.Send("hosting.vm.create_from", params, &response)
 	if err != nil {
@@ -474,7 +475,7 @@ func checkParametersAndGetVMSpecMap(fn string,
 		if image.DiskID == "" {
 			return nil, diskid, ipid, imageid, &HostingError{fn, "DiskImage", "ID", ErrNotProvided}
 		}
-		imageid, err = strconv.Atoi(image.ID)
+		imageid, err = strconv.Atoi(image.DiskID)
 		if err != nil {
 			return nil, diskid, ipid, imageid, internalParseError("DiskImage", "ID")
 		}
