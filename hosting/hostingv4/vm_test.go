@@ -194,3 +194,197 @@ func TestIPDetach(t *testing.T) {
 		t.Errorf("Error, number of ips does not match, expected %v, got %v instead", expected.Ips, vmres.Ips)
 	}
 }
+
+func TestVMStop(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockClient := mock.NewMockV4Caller(mockCtrl)
+	testHosting := Newv4Hosting(mockClient)
+
+	paramsVMStop := []interface{}{3}
+	responseVMStop := Operation{ID: 5, VMID: 3}
+	stop := mockClient.EXPECT().Send("hosting.vm.stop",
+		paramsVMStop, gomock.Any()).SetArg(2, responseVMStop).Return(nil)
+
+	paramsWait := []interface{}{responseVMStop.ID}
+	responseWait := operationInfo{responseVMStop.ID, "DONE"}
+	mockClient.EXPECT().Send("operation.info",
+		paramsWait, gomock.Any()).SetArg(2, responseWait).Return(nil).After(stop)
+
+	err := testHosting.StopVM(VM{ID: "3"})
+
+	if err != nil {
+		t.Errorf("Error, %s", err)
+	}
+}
+
+func TestCreateVMWithExistingDisk(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockClient := mock.NewMockV4Caller(mockCtrl)
+	testHosting := Newv4Hosting(mockClient)
+
+	now := time.Now()
+
+	paramsVMCreate := []interface{}{
+		map[string]interface{}{
+			"ip_version":    4,
+			"sys_disk_id":   5,
+			"bandwidth":     hosting.DefaultBandwidth,
+			"datacenter_id": region,
+			"hostname":      vmname,
+		}}
+	responseVMCreate := []Operation{{ID: 3, IfaceID: 5}, {ID: 1, VMID: vmid}}
+	creation := mockClient.EXPECT().Send("hosting.vm.create",
+		paramsVMCreate, gomock.Any()).SetArg(2, responseVMCreate).Return(nil)
+
+	paramsWait := []interface{}{responseVMCreate[1].ID}
+	responseWait := operationInfo{responseVMCreate[1].ID, "DONE"}
+	wait := mockClient.EXPECT().Send("operation.info",
+		paramsWait, gomock.Any()).SetArg(2, responseWait).Return(nil).After(creation)
+
+	paramsVMInfo := []interface{}{responseVMCreate[1].VMID}
+	ipsresponse := []iPAddressv4{{1, "192.168.1.1", region, 4, vmid, "used"}}
+	ifaceresponse := []iface{{ipsresponse, region, 1, vmid}}
+	diskresponse := []diskv4{{5, "sysdisk_1", disksizeMB, region, "created", "data", []int{vmid}, true}}
+	responseVMInfo := vmv4{vmid, vmname, region, "", "", 1, 512, now, ifaceresponse, diskresponse, []int{1, 2, 3}, "running"}
+	mockClient.EXPECT().Send("hosting.vm.info",
+		paramsVMInfo, gomock.Any()).SetArg(2, responseVMInfo).Return(nil).After(wait)
+
+	vmspec := VMSpec{
+		RegionID: regionstr,
+		Hostname: vmname,
+	}
+	disk := Disk{
+		ID:       "5",
+		Name:     "sysdisk_1",
+		Size:     disksize,
+		RegionID: regionstr,
+		State:    "created",
+		Type:     "data",
+		VM:       []string{},
+		BootDisk: false,
+	}
+
+	vm, _, _, err := testHosting.CreateVMWithExistingDisk(vmspec, hosting.IPVersion(4), disk)
+	if err != nil {
+		log.Println(err)
+	}
+
+	expectedIPS := []IPAddress{{"1", "192.168.1.1", regionstr, hosting.IPVersion(4), vmidstr, "used"}}
+	expectedDisks := []Disk{{"5", "sysdisk_1", disksize, regionstr, "created", "data", []string{vmidstr}, true}}
+	expected := VM{
+		ID:          vmidstr,
+		Hostname:    vmname,
+		RegionID:    regionstr,
+		Farm:        "",
+		Description: "",
+		Cores:       1,
+		Memory:      512,
+		DateCreated: now,
+		Ips:         expectedIPS,
+		Disks:       expectedDisks,
+		SSHKeysID:   []string{"1", "2", "3"},
+		State:       "running",
+	}
+
+	if !reflect.DeepEqual(vm, expected) {
+		t.Errorf("Error, expected %+v, got instead %+v", expected, vm)
+	}
+}
+
+func TestVMFromName(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockClient := mock.NewMockV4Caller(mockCtrl)
+	testHosting := Newv4Hosting(mockClient)
+
+	now := time.Now()
+
+	paramsVMList := []interface{}{map[string]interface{}{"hostname": vmname}}
+	responseVMList := []vmv4{{ID: vmid, Hostname: vmname}}
+	list := mockClient.EXPECT().Send("hosting.vm.list",
+		paramsVMList, gomock.Any()).SetArg(2, responseVMList).Return(nil)
+
+	paramsVMInfo := []interface{}{responseVMList[0].ID}
+	ipsresponse := []iPAddressv4{{1, "192.168.1.1", region, 4, vmid, "used"}}
+	ifaceresponse := []iface{{ipsresponse, region, 1, vmid}}
+	diskresponse := []diskv4{{5, "sysdisk_1", disksizeMB, region, "created", "data", []int{vmid}, true}}
+	responseVMInfo := vmv4{vmid, vmname, region, "", "", 1, 512, now, ifaceresponse, diskresponse, []int{1, 2, 3}, "running"}
+	mockClient.EXPECT().Send("hosting.vm.info",
+		paramsVMInfo, gomock.Any()).SetArg(2, responseVMInfo).Return(nil).After(list)
+
+	vm, _ := testHosting.VMFromName(vmname)
+
+	expectedIPS := []IPAddress{{"1", "192.168.1.1", regionstr, hosting.IPVersion(4), vmidstr, "used"}}
+	expectedDisks := []Disk{{"5", "sysdisk_1", disksize, regionstr, "created", "data", []string{vmidstr}, true}}
+	expected := VM{
+		ID:          vmidstr,
+		Hostname:    vmname,
+		RegionID:    regionstr,
+		Farm:        "",
+		Description: "",
+		Cores:       1,
+		Memory:      512,
+		DateCreated: now,
+		Ips:         expectedIPS,
+		Disks:       expectedDisks,
+		SSHKeysID:   []string{"1", "2", "3"},
+		State:       "running",
+	}
+
+	if !reflect.DeepEqual(vm, expected) {
+		t.Errorf("Error, expected %+v, got instead %+v", expected, vm)
+	}
+}
+
+func TestRenameVM(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockClient := mock.NewMockV4Caller(mockCtrl)
+	testHosting := Newv4Hosting(mockClient)
+
+	now := time.Now()
+
+	paramsVMUpdate := []interface{}{vmid, map[string]interface{}{"hostname": "NEWNAME"}}
+	responseVMUpdate := Operation{ID: 5, VMID: vmid}
+	update := mockClient.EXPECT().Send("hosting.vm.update",
+		paramsVMUpdate, gomock.Any()).SetArg(2, responseVMUpdate).Return(nil)
+
+	paramsWait := []interface{}{responseVMUpdate.ID}
+	responseWait := operationInfo{responseVMUpdate.ID, "DONE"}
+	wait := mockClient.EXPECT().Send("operation.info",
+		paramsWait, gomock.Any()).SetArg(2, responseWait).Return(nil).After(update)
+
+	paramsVMInfo := []interface{}{vmid}
+	ipsresponse := []iPAddressv4{{1, "192.168.1.1", region, 4, vmid, "used"}}
+	ifaceresponse := []iface{{ipsresponse, region, 1, vmid}}
+	diskresponse := []diskv4{{5, "sysdisk_1", disksizeMB, region, "created", "data", []int{vmid}, true}}
+	responseVMInfo := vmv4{vmid, "NEWNAME", region, "", "", 1, 512, now, ifaceresponse, diskresponse, []int{1, 2, 3}, "running"}
+	mockClient.EXPECT().Send("hosting.vm.info",
+		paramsVMInfo, gomock.Any()).SetArg(2, responseVMInfo).Return(nil).After(wait)
+
+	vmreq := VM{ID: vmidstr}
+	vm, _ := testHosting.RenameVM(vmreq, "NEWNAME")
+
+	expectedIPS := []IPAddress{{"1", "192.168.1.1", regionstr, hosting.IPVersion(4), vmidstr, "used"}}
+	expectedDisks := []Disk{{"5", "sysdisk_1", disksize, regionstr, "created", "data", []string{vmidstr}, true}}
+	expected := VM{
+		ID:          vmidstr,
+		Hostname:    "NEWNAME",
+		RegionID:    regionstr,
+		Farm:        "",
+		Description: "",
+		Cores:       1,
+		Memory:      512,
+		DateCreated: now,
+		Ips:         expectedIPS,
+		Disks:       expectedDisks,
+		SSHKeysID:   []string{"1", "2", "3"},
+		State:       "running",
+	}
+
+	if !reflect.DeepEqual(vm, expected) {
+		t.Errorf("Error, expected %+v, got instead %+v", expected, vm)
+	}
+}
