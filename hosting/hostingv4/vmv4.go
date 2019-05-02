@@ -127,6 +127,7 @@ func (h Hostingv4) CreateVMWithExistingIP(vm VMSpec, image DiskImage, ip IPAddre
 	}
 	params := []interface{}{vmspecmap, diskspec, imageid}
 	response := []Operation{}
+	log.Printf("[INFO] Creating VM %s...", vmspecmap["hostname"])
 	err = h.Send("hosting.vm.create_from", params, &response)
 	if err != nil {
 		return VM{}, IPAddress{}, Disk{}, err
@@ -138,6 +139,7 @@ func (h Hostingv4) CreateVMWithExistingIP(vm VMSpec, image DiskImage, ip IPAddre
 	if err = h.waitForOp(vmop); err != nil {
 		return VM{}, IPAddress{}, Disk{}, err
 	}
+	log.Printf("[INFO] VM %s(ID: %d) created!", vmspecmap["hostname"], response[2].VMID)
 	vmRes, err := h.vmFromID(vmop.ID)
 	if err != nil {
 		return VM{}, IPAddress{}, Disk{}, err
@@ -163,6 +165,7 @@ func (h Hostingv4) CreateVM(vm VMSpec, image DiskImage, version hosting.IPVersio
 	diskparam, _ := structToMap(diskspec)
 	params := []interface{}{vmspecmap, diskparam, imageid}
 	response := []Operation{}
+	log.Printf("[INFO] Creating VM %s...", vmspecmap["hostname"])
 	err = h.Send("hosting.vm.create_from", params, &response)
 	if err != nil {
 		return VM{}, IPAddress{}, Disk{}, err
@@ -174,6 +177,7 @@ func (h Hostingv4) CreateVM(vm VMSpec, image DiskImage, version hosting.IPVersio
 	if err = h.waitForOp(vmop); err != nil {
 		return VM{}, IPAddress{}, Disk{}, err
 	}
+	log.Printf("[INFO] VM %s(ID: %d) created!", vmspecmap["hostname"], response[2].VMID)
 	vmRes, err := h.vmFromID(vmop.ID)
 	if err != nil {
 		return VM{}, IPAddress{}, Disk{}, err
@@ -302,6 +306,7 @@ func (h Hostingv4) RebootVM(vm VM) error {
 
 // DeleteVM deletes a vm
 // Add cascade option?
+// Automatically stop vm before deleting?
 func (h Hostingv4) DeleteVM(vm VM) error {
 	var fn = "delete"
 	return h.opVM(vm, fn)
@@ -503,15 +508,13 @@ func (h Hostingv4) createVMFromVMSpecMap(vmspecmap map[string]interface{}) (int,
 		return -1, err
 	}
 
-	for _, op := range response {
-		if err := h.waitForOp(op); err != nil {
-			return -1, err
-		}
+	if err := h.waitForOp(response[1]); err != nil {
+		return -1, err
 	}
 
-	log.Printf("[INFO] VM %s(ID: %d) created!", vmspecmap["hostname"], response[0].VMID)
+	log.Printf("[INFO] VM %s(ID: %d) created!", vmspecmap["hostname"], response[1].VMID)
 
-	return response[0].VMID, nil
+	return response[1].VMID, nil
 }
 
 // Internal functions for type conversion
