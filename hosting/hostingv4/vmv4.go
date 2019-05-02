@@ -255,8 +255,13 @@ func (h Hostingv4) ipAttachDetach(vm VM, ip IPAddress, op string) (VM, IPAddress
 	if err != nil {
 		return VM{}, IPAddress{}, internalParseError("IPAddress", "ID")
 	}
+	// Get corresponding iface id
+	ifaceid, err := h.ifaceIDFromIPID(ipid)
+	if err != nil {
+		return VM{}, IPAddress{}, err
+	}
 
-	params := []interface{}{vmid, ipid}
+	params := []interface{}{vmid, ifaceid}
 	response := Operation{}
 	err = h.Send("hosting.vm."+op, params, &response)
 	if err != nil {
