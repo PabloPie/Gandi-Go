@@ -85,7 +85,7 @@ func (h Hostingv4) DescribeIP(ipfilter IPFilter) ([]IPAddress, error) {
 func (h Hostingv4) DeleteIP(ip IPAddress) error {
 	ipid, err := strconv.Atoi(ip.ID)
 	if !isIgnorableErr(err) {
-		return internalParseError("(none)", "ipid")
+		return internalParseError("IPAddress", "ID")
 	}
 
 	var response = Operation{}
@@ -94,6 +94,9 @@ func (h Hostingv4) DeleteIP(ip IPAddress) error {
 		return err
 	}
 	err = h.Send("hosting.iface.delete", []interface{}{response.IfaceID}, &response)
+	if err != nil {
+		return err
+	}
 
 	return h.waitForOp(response)
 }
