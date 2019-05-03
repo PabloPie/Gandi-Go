@@ -56,6 +56,7 @@ func (h Hostingv4) CreateDisk(newDisk DiskSpec) (Disk, error) {
 
 	response := Operation{}
 	params := []interface{}{disk}
+	log.Printf("[INFO] Creating Disk %s...", newDisk.Name)
 	err = h.Send("hosting.disk.create", params, &response)
 	if err != nil {
 		return Disk{}, err
@@ -63,6 +64,7 @@ func (h Hostingv4) CreateDisk(newDisk DiskSpec) (Disk, error) {
 	if err := h.waitForOp(response); err != nil {
 		return Disk{}, err
 	}
+	log.Printf("[INFO] Disk %s(ID: %d) created!", newDisk.Name, response.DiskID)
 
 	return h.diskFromID(response.DiskID)
 }
@@ -90,7 +92,7 @@ func (h Hostingv4) CreateDiskFromImage(newDisk DiskSpec, srcDisk DiskImage) (Dis
 
 	response := Operation{}
 	params := []interface{}{disk, imageid}
-	log.Printf("Creating Disk %s...", newDisk.Name)
+	log.Printf("[INFO] Creating Disk %s...", newDisk.Name)
 	err = h.Send("hosting.disk.create_from", params, &response)
 	if err != nil {
 		return Disk{}, err
@@ -99,7 +101,7 @@ func (h Hostingv4) CreateDiskFromImage(newDisk DiskSpec, srcDisk DiskImage) (Dis
 		return Disk{}, err
 	}
 
-	log.Printf("Disk %s(ID: %d) created!", newDisk.Name, response.DiskID)
+	log.Printf("[INFO] Disk %s(ID: %d) created!", newDisk.Name, response.DiskID)
 	return h.diskFromID(response.DiskID)
 }
 
