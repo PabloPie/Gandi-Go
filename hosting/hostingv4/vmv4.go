@@ -125,7 +125,9 @@ func (h Hostingv4) CreateVMWithExistingIP(vm VMSpec, image DiskImage, ip IPAddre
 		RegionID: vmspecmap["datacenter_id"].(int),
 		Size:     int(diskSize) * 1024,
 	}
-	params := []interface{}{vmspecmap, diskspec, imageid}
+	diskparam, _ := structToMap(diskspec)
+
+	params := []interface{}{vmspecmap, diskparam, imageid}
 	response := []Operation{}
 	log.Printf("[INFO] Creating VM %s...", vmspecmap["hostname"])
 	err = h.Send("hosting.vm.create_from", params, &response)
