@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/PabloPie/Gandi-Go/client"
 	"github.com/PabloPie/Gandi-Go/mock"
 	"github.com/golang/mock/gomock"
 )
@@ -320,5 +321,70 @@ func TestRenameDisk(t *testing.T) {
 	if disk.Name != newName {
 		t.Errorf("Error, expected disk name to be %s, got '%s' instead",
 			newName, disk.Name)
+	}
+}
+
+func TestDeleteDiskBadID(t *testing.T) {
+	cl, err := client.NewClientv4("", "1234")
+	testHosting := Newv4Hosting(cl)
+
+	disk := Disk{
+		ID: "ThisisnotAnID",
+	}
+	err = testHosting.DeleteDisk(disk)
+	if err == nil {
+		t.Errorf("Error, expected error when parsing ID")
+	}
+}
+
+func TestCreateDiskBadRegionID(t *testing.T) {
+	cl, err := client.NewClientv4("", "1234")
+	testHosting := Newv4Hosting(cl)
+
+	diskspec := DiskSpec{
+		RegionID: "ThisisnotAnID",
+	}
+	_, err = testHosting.CreateDisk(diskspec)
+	if err == nil {
+		t.Errorf("Error, expected error when parsing ID")
+	}
+}
+
+func TestFilterDisksBadID(t *testing.T) {
+	cl, err := client.NewClientv4("", "1234")
+	testHosting := Newv4Hosting(cl)
+
+	filter := DiskFilter{
+		ID: "ThisisnotAnID",
+	}
+	_, err = testHosting.DescribeDisks(filter)
+	if err == nil {
+		t.Errorf("Error, expected error when parsing ID")
+	}
+}
+
+func TestFilterDisksBadRegionID(t *testing.T) {
+	cl, err := client.NewClientv4("", "1234")
+	testHosting := Newv4Hosting(cl)
+
+	filter := DiskFilter{
+		RegionID: "ThisisnotAnID",
+	}
+	_, err = testHosting.DescribeDisks(filter)
+	if err == nil {
+		t.Errorf("Error, expected error when parsing ID")
+	}
+}
+
+func TestFilterDisksBadVMID(t *testing.T) {
+	cl, err := client.NewClientv4("", "1234")
+	testHosting := Newv4Hosting(cl)
+
+	filter := DiskFilter{
+		VMID: "ThisisnotAnID",
+	}
+	_, err = testHosting.DescribeDisks(filter)
+	if err == nil {
+		t.Errorf("Error, expected error when parsing ID")
 	}
 }
