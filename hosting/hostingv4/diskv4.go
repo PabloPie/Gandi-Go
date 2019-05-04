@@ -254,30 +254,20 @@ func toDiskSpecv4(disk DiskSpec) (diskSpecv4, error) {
 	}, nil
 }
 
-// isIgnorableErr returns true if an Atoi conversion error is caused
-// by a bad string format (ErrSyntax) or there is no error
-func isIgnorableErr(err error) bool {
-	if err != nil {
-		err = err.(*strconv.NumError).Err
-		return err == strconv.ErrSyntax
-	}
-	return true
-}
-
 // toDiskFilterv4 converts a Hosting DiskFilter to a v4 DiskFilter
 func toDiskFilterv4(disk DiskFilter) (diskFilterv4, error) {
-	region, err := strconv.Atoi(disk.RegionID)
-	if !isIgnorableErr(err) {
+	region := toInt(disk.RegionID)
+	if region == -1 {
 		return diskFilterv4{}, internalParseError("DiskFilter", "RegionID")
 	}
 
-	id, err := strconv.Atoi(disk.ID)
-	if !isIgnorableErr(err) {
+	id := toInt(disk.ID)
+	if id == -1 {
 		return diskFilterv4{}, internalParseError("DiskFilter", "ID")
 	}
 
-	vmid, err := strconv.Atoi(disk.VMID)
-	if !isIgnorableErr(err) {
+	vmid := toInt(disk.VMID)
+	if vmid == -1 {
 		return diskFilterv4{}, internalParseError("DiskFilter", "VMID")
 	}
 	return diskFilterv4{

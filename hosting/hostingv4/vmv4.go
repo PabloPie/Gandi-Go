@@ -522,13 +522,13 @@ func (h Hostingv4) createVMFromVMSpecMap(vmspecmap map[string]interface{}) (int,
 // Internal functions for type conversion
 
 func toVMFilterv4(vmfilter VMFilter) (vmFilterv4, error) {
-	region, err := strconv.Atoi(vmfilter.RegionID)
-	if !isIgnorableErr(err) {
+	region := toInt(vmfilter.RegionID)
+	if region == -1 {
 		return vmFilterv4{}, internalParseError("VMFilter", "RegionID")
 	}
 
-	id, err := strconv.Atoi(vmfilter.ID)
-	if !isIgnorableErr(err) {
+	id := toInt(vmfilter.ID)
+	if id == -1 {
 		return vmFilterv4{}, internalParseError("VMFilter", "ID")
 	}
 
@@ -543,7 +543,7 @@ func toVMFilterv4(vmfilter VMFilter) (vmFilterv4, error) {
 
 func toVMSpecv4(vm VMSpec) (vmSpecv4, error) {
 	regionid, err := strconv.Atoi(vm.RegionID)
-	if !isIgnorableErr(err) {
+	if err != nil {
 		return vmSpecv4{}, internalParseError("VMSpec", "RegionID")
 	}
 	var keys []int

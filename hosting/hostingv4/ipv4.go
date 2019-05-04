@@ -39,7 +39,7 @@ func (h Hostingv4) CreateIP(region Region, version hosting.IPVersion) (IPAddress
 	var response = Operation{}
 
 	region_id_int, err = strconv.Atoi(region.ID)
-	if !isIgnorableErr(err) {
+	if err != nil {
 		return IPAddress{}, internalParseError("Region", "ID")
 	}
 
@@ -64,7 +64,7 @@ func (h Hostingv4) CreateIP(region Region, version hosting.IPVersion) (IPAddress
 }
 
 func (h Hostingv4) DescribeIP(ipfilter IPFilter) ([]IPAddress, error) {
-	ipmap, err := ipFilterToMap(&ipfilter)
+	ipmap, err := ipFilterToMap(ipfilter)
 	if err != nil {
 		return nil, err
 	}
@@ -84,7 +84,7 @@ func (h Hostingv4) DescribeIP(ipfilter IPFilter) ([]IPAddress, error) {
 
 func (h Hostingv4) DeleteIP(ip IPAddress) error {
 	ipid, err := strconv.Atoi(ip.ID)
-	if !isIgnorableErr(err) {
+	if err != nil {
 		return internalParseError("IPAddress", "ID")
 	}
 
@@ -123,7 +123,7 @@ func (h Hostingv4) ipFromID(ipid int) (IPAddress, error) {
 
 // Internal methods to convert Hosting structures to v4 structures
 
-func ipFilterToMap(ipfilter *IPFilter) (map[string]interface{}, error) {
+func ipFilterToMap(ipfilter IPFilter) (map[string]interface{}, error) {
 	ipmap := make(map[string]interface{})
 	var err error
 
@@ -133,15 +133,16 @@ func ipFilterToMap(ipfilter *IPFilter) (map[string]interface{}, error) {
 		}
 		ipmap["version"] = int(ipfilter.Version)
 	}
+
 	if ipfilter.ID != "" {
 		ipmap["id"], err = strconv.Atoi(ipfilter.ID)
-		if !isIgnorableErr(err) {
+		if err != nil {
 			return nil, internalParseError("IPFilter", "ID")
 		}
 	}
 	if ipfilter.RegionID != "" {
 		ipmap["datacenter_id"], err = strconv.Atoi(ipfilter.RegionID)
-		if !isIgnorableErr(err) {
+		if err != nil {
 			return nil, internalParseError("IPFilter", "ID")
 		}
 	}
