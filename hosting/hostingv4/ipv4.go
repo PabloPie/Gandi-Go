@@ -21,6 +21,13 @@ type iPAddressv4 struct {
 	State    string `xmlrpc:"state"`
 }
 
+type iface struct {
+	IPs      []iPAddressv4 `xmlrpc:"ips"`
+	RegionID int           `xmlrpc:"datacenter_id"`
+	ID       int           `xmlrpc:"id"`
+	VMID     int           `xmlrpc:"vm_id"`
+}
+
 func (h Hostingv4) CreateIP(region Region, version hosting.IPVersion) (IPAddress, error) {
 	if version != hosting.IPv4 && version != hosting.IPv6 {
 		return IPAddress{}, errors.New("Bad IP version")
@@ -32,7 +39,7 @@ func (h Hostingv4) CreateIP(region Region, version hosting.IPVersion) (IPAddress
 	var response = Operation{}
 
 	region_id_int, err = strconv.Atoi(region.ID)
-	if !isIgnorableErr(err) {
+	if err != nil {
 		return IPAddress{}, internalParseError("Region", "ID")
 	}
 
@@ -57,7 +64,7 @@ func (h Hostingv4) CreateIP(region Region, version hosting.IPVersion) (IPAddress
 }
 
 func (h Hostingv4) DescribeIP(ipfilter IPFilter) ([]IPAddress, error) {
-	ipmap, err := ipFilterToMap(&ipfilter)
+	ipmap, err := ipFilterToMap(ipfilter)
 	if err != nil {
 		return nil, err
 	}
@@ -75,25 +82,48 @@ func (h Hostingv4) DescribeIP(ipfilter IPFilter) ([]IPAddress, error) {
 	return ips, nil
 }
 
-func (h Hostingv4) DeleteIP(ipid string) error {
-	ipid_int, err := strconv.Atoi(ipid)
-	if !isIgnorableErr(err) {
-		return internalParseError("(none)", "ipid")
+func (h Hostingv4) DeleteIP(ip IPAddress) error {
+	ipid, err := strconv.Atoi(ip.ID)
+	if err != nil {
+		return internalParseError("IPAddress", "ID")
 	}
 
 	var response = Operation{}
-	err = h.Send("hosting.ip.info", []interface{}{ipid_int}, &response)
+	err = h.Send("hosting.ip.info", []interface{}{ipid}, &response)
 	if err != nil {
 		return err
 	}
 	err = h.Send("hosting.iface.delete", []interface{}{response.IfaceID}, &response)
+	if err != nil {
+		return err
+	}
 
 	return h.waitForOp(response)
 }
 
+func (h Hostingv4) ifaceIDFromIPID(ipid int) (int, error) {
+	// An operation already contains a field for iface_id
+	// we avoid defining a new struct
+	response := Operation{}
+	err := h.Send("hosting.ip.info", []interface{}{ipid}, &response)
+	if err != nil {
+		return 0, err
+	}
+	return response.IfaceID, nil
+}
+
+func (h Hostingv4) ipFromID(ipid int) (IPAddress, error) {
+	response := iPAddressv4{}
+	err := h.Send("hosting.ip.info", []interface{}{ipid}, &response)
+	if err != nil {
+		return IPAddress{}, err
+	}
+	return toIPAddress(response), nil
+}
+
 // Internal methods to convert Hosting structures to v4 structures
 
-func ipFilterToMap(ipfilter *IPFilter) (map[string]interface{}, error) {
+func ipFilterToMap(ipfilter IPFilter) (map[string]interface{}, error) {
 	ipmap := make(map[string]interface{})
 	var err error
 
@@ -103,15 +133,16 @@ func ipFilterToMap(ipfilter *IPFilter) (map[string]interface{}, error) {
 		}
 		ipmap["version"] = int(ipfilter.Version)
 	}
+
 	if ipfilter.ID != "" {
 		ipmap["id"], err = strconv.Atoi(ipfilter.ID)
-		if !isIgnorableErr(err) {
+		if err != nil {
 			return nil, internalParseError("IPFilter", "ID")
 		}
 	}
 	if ipfilter.RegionID != "" {
 		ipmap["datacenter_id"], err = strconv.Atoi(ipfilter.RegionID)
-		if !isIgnorableErr(err) {
+		if err != nil {
 			return nil, internalParseError("IPFilter", "ID")
 		}
 	}

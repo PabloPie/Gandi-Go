@@ -6,6 +6,8 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/PabloPie/Gandi-Go/client"
+
 	"github.com/PabloPie/Gandi-Go/hosting"
 	"github.com/PabloPie/Gandi-Go/mock"
 	"github.com/golang/mock/gomock"
@@ -131,7 +133,7 @@ func TestCreateIPCreationFailed(t *testing.T) {
 	wait1 := mockClient.EXPECT().Send("operation.info",
 		[]interface{}{myOp.ID},
 		gomock.Any()).SetArg(2, operationInfo{myOp.ID, "WAIT"}).Return(nil).After(creation)
-	
+
 	mockClient.EXPECT().Send("operation.info",
 		[]interface{}{myOp.ID},
 		gomock.Any()).SetArg(2, operationInfo{myOp.ID, "ERROR"}).Return(nil).After(wait1)
@@ -169,7 +171,7 @@ func TestDeleteIP(t *testing.T) {
 		[]interface{}{opWait.ID},
 		gomock.Any()).SetArg(2, operationInfo{opWait.ID, "DONE"}).Return(nil).After(delete)
 
-	err := testHosting.DeleteIP(ip.ID)
+	err := testHosting.DeleteIP(ip)
 
 	if !reflect.DeepEqual(nil, err) {
 		t.Errorf("Error, expected %+v, got instead %+v", nil, err)
@@ -185,7 +187,7 @@ func TestDescribeAllIP(t *testing.T) {
 	testHosting := Newv4Hosting(mockClient)
 
 	filter := IPFilter{}
-	ipmap, _ := ipFilterToMap(&filter)
+	ipmap, _ := ipFilterToMap(filter)
 
 	mockClient.EXPECT().Send("hosting.ip.list",
 		[]interface{}{ipmap},
@@ -257,7 +259,7 @@ func testDescribeIPByVersion(t *testing.T, version hosting.IPVersion) ([]IPAddre
 	testHosting := Newv4Hosting(mockClient)
 
 	filter := IPFilter{Version: version}
-	ipmap, _ := ipFilterToMap(&filter)
+	ipmap, _ := ipFilterToMap(filter)
 
 	var ipsv4version []iPAddressv4
 	versionInt := int(version)
@@ -282,7 +284,7 @@ func TestDescribeIPByIP(t *testing.T) {
 
 	ip := ipsv4[0]
 	filter := IPFilter{IP: ip.IP}
-	ipmap, _ := ipFilterToMap(&filter)
+	ipmap, _ := ipFilterToMap(filter)
 
 	mockClient.EXPECT().Send("hosting.ip.list",
 		[]interface{}{ipmap},
@@ -315,7 +317,7 @@ func TestDescribeIPByID(t *testing.T) {
 	ip := ipsv4[1]
 	idString := strconv.Itoa(ip.ID)
 	filter := IPFilter{ID: idString}
-	ipmap, _ := ipFilterToMap(&filter)
+	ipmap, _ := ipFilterToMap(filter)
 
 	mockClient.EXPECT().Send("hosting.ip.list",
 		[]interface{}{ipmap},
@@ -348,7 +350,7 @@ func TestDescribeIPByRegionID(t *testing.T) {
 	regionId := test_regionid
 	regionIdString := strconv.Itoa(test_regionid)
 	filter := IPFilter{RegionID: regionIdString}
-	ipmap, _ := ipFilterToMap(&filter)
+	ipmap, _ := ipFilterToMap(filter)
 
 	var ipsv4region []iPAddressv4
 	var expected []IPAddress
@@ -382,7 +384,7 @@ func TestDescribeIPByRegionIDAndVersion(t *testing.T) {
 	versionInt := int(test_version)
 
 	filter := IPFilter{RegionID: regionIdString, Version: version}
-	ipmap, _ := ipFilterToMap(&filter)
+	ipmap, _ := ipFilterToMap(filter)
 
 	var ipsv4region []iPAddressv4
 	var expected []IPAddress
@@ -405,5 +407,57 @@ func TestDescribeIPByRegionIDAndVersion(t *testing.T) {
 
 	if !reflect.DeepEqual(expected, ipsresult) {
 		t.Errorf("Error, expected %+v, got instead %+v", expected, ipsresult)
+	}
+}
+
+func TestDeleteIPBadID(t *testing.T) {
+	cl, err := client.NewClientv4("", "1234")
+	testHosting := Newv4Hosting(cl)
+
+	ip := IPAddress{
+		ID: "ThisisnotAnID",
+	}
+	err = testHosting.DeleteIP(ip)
+	if err == nil {
+		t.Errorf("Error, expected error when parsing ID")
+	}
+}
+
+func TestCreateIPBadRegionID(t *testing.T) {
+	cl, err := client.NewClientv4("", "1234")
+	testHosting := Newv4Hosting(cl)
+
+	region := Region{
+		ID: "ThisisnotAnID",
+	}
+	_, err = testHosting.CreateIP(region, hosting.IPVersion(4))
+	if err == nil {
+		t.Errorf("Error, expected error when parsing ID")
+	}
+}
+
+func TestFilterBadID(t *testing.T) {
+	cl, err := client.NewClientv4("", "1234")
+	testHosting := Newv4Hosting(cl)
+
+	filter := IPFilter{
+		ID: "ThisisnotAnID",
+	}
+	_, err = testHosting.DescribeIP(filter)
+	if err == nil {
+		t.Errorf("Error, expected error when parsing ID")
+	}
+}
+
+func TestFilterBadRegionID(t *testing.T) {
+	cl, err := client.NewClientv4("", "1234")
+	testHosting := Newv4Hosting(cl)
+
+	filter := IPFilter{
+		RegionID: "ThisisnotAnID",
+	}
+	_, err = testHosting.DescribeIP(filter)
+	if err == nil {
+		t.Errorf("Error, expected error when parsing ID")
 	}
 }

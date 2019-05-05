@@ -16,7 +16,7 @@ type DiskManager interface {
 type Disk struct {
 	ID       string
 	Name     string
-	Size     uint
+	Size     int
 	RegionID string
 	State    string
 	Type     string
@@ -28,10 +28,11 @@ type Disk struct {
 type DiskSpec struct {
 	RegionID string
 	Name     string
-	Size     uint
+	Size     int
 }
 
 //DiskFilter is used to filter the results DescribeDisks returns,
+// TODO: allow a list of elements
 type DiskFilter struct {
 	ID       string
 	RegionID string

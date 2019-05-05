@@ -3,6 +3,7 @@ package hostingv4
 import (
 	"errors"
 	"reflect"
+	"strconv"
 
 	"github.com/PabloPie/Gandi-Go/client"
 	"github.com/PabloPie/Gandi-Go/hosting"
@@ -69,4 +70,20 @@ func structToMap(s interface{}) (map[string]interface{}, error) {
 		out[name] = value
 	}
 	return out, nil
+}
+
+// used to cast optional string params to int
+// if the parameter is not set,
+// we put a zero value to ignore it later
+// if the conversion returns an error,
+// we propagate it through a negative value
+func toInt(str string) (num int) {
+	if str == "" {
+		return 0
+	}
+	num, err := strconv.Atoi(str)
+	if err != nil {
+		return -1
+	}
+	return
 }

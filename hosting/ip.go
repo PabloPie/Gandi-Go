@@ -13,7 +13,7 @@ const (
 type IPManager interface {
 	CreateIP(region Region, version IPVersion) (IPAddress, error)
 	DescribeIP(ipfilter IPFilter) ([]IPAddress, error)
-	DeleteIP(ipid string) error
+	DeleteIP(ip IPAddress) error
 }
 
 // IPAddress is the go representation of a Gandi IP

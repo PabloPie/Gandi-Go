@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/PabloPie/Gandi-Go/client"
 	"github.com/PabloPie/Gandi-Go/mock"
 	"github.com/golang/mock/gomock"
 )
@@ -12,14 +13,16 @@ import (
 var (
 	// default values
 	defaultRegion = 3
-	defaultSize   = 10240
+	defaultSize   = 10
+	defaultSizeMB = 10240
 	// expected params
 	diskid     = 1
 	diskidstr  = "1"
 	imageid    = 100
 	imageidstr = "100"
 	diskname   = "Disk1"
-	disksize   = 20480
+	disksize   = 20
+	disksizeMB = 20480
 	region     = 4
 	regionstr  = "4"
 )
@@ -28,7 +31,7 @@ var disks = []diskv4{
 	diskv4{1, "sys_disk1", 10240, 4, "created", "data", []int{1}, true},
 	diskv4{4, "sys_disk3", 10240, 4, "created", "data", []int{3}, true},
 	diskv4{2, "sys_disk2", 20480, 3, "created", "data", []int{2}, true},
-	diskv4{3, "disk3", 1024, 3, "created", "data", []int{2}, false},
+	diskv4{3, "disk3", 10240, 3, "created", "data", []int{2}, false},
 	diskv4{5, diskname, 10240, 3, "created", "data", []int{}, false},
 }
 
@@ -41,7 +44,7 @@ func TestCreateDiskWithNameSizeAndRegion(t *testing.T) {
 	paramsDiskCreate := []interface{}{map[string]interface{}{
 		"datacenter_id": region,
 		"name":          diskname,
-		"size":          disksize,
+		"size":          disksizeMB,
 	}}
 	responseDiskCreate := Operation{
 		ID:     1,
@@ -56,21 +59,21 @@ func TestCreateDiskWithNameSizeAndRegion(t *testing.T) {
 		paramsWait, gomock.Any()).SetArg(2, responseWait).Return(nil).After(creation)
 
 	paramsDiskInfo := []interface{}{responseDiskCreate.DiskID}
-	responseDiskInfo := diskv4{diskid, diskname, disksize, region, "created", "data", []int{}, false}
+	responseDiskInfo := diskv4{diskid, diskname, disksizeMB, region, "created", "data", []int{}, false}
 	mockClient.EXPECT().Send("hosting.disk.info",
 		paramsDiskInfo, gomock.Any()).SetArg(2, responseDiskInfo).Return(nil).After(wait)
 
 	diskspec := DiskSpec{
 		RegionID: regionstr,
 		Name:     diskname,
-		Size:     uint(disksize),
+		Size:     disksize,
 	}
 	disk, _ := testHosting.CreateDisk(diskspec)
 
 	expected := Disk{
 		ID:       diskidstr,
 		Name:     diskname,
-		Size:     uint(disksize),
+		Size:     disksize,
 		RegionID: regionstr,
 		State:    "created",
 		Type:     "data",
@@ -115,7 +118,7 @@ func TestCreateDiskFromImageWithoutSize(t *testing.T) {
 	}
 	diskimage := DiskImage{
 		DiskID:   imageidstr,
-		Size:     3072,
+		Size:     3,
 		Name:     "Debian 9",
 		RegionID: regionstr,
 	}
@@ -124,7 +127,7 @@ func TestCreateDiskFromImageWithoutSize(t *testing.T) {
 	expected := Disk{
 		ID:       diskidstr,
 		Name:     diskname,
-		Size:     3072,
+		Size:     3,
 		RegionID: regionstr,
 		State:    "created",
 		Type:     "data",
@@ -274,9 +277,10 @@ func TestExtendDisk(t *testing.T) {
 	mockClient.EXPECT().Send("hosting.disk.info",
 		paramsDiskInfo, gomock.Any()).SetArg(2, responseDiskInfo).Return(nil).After(wait)
 
-	diskparam := Disk{ID: strconv.Itoa(disks[0].ID), Size: uint(disks[0].Size)}
+	diskparam := Disk{ID: strconv.Itoa(disks[0].ID), Size: 10}
 	disk, _ := testHosting.ExtendDisk(diskparam, extendSize)
-	if disk.Size != uint(disks[0].Size+sizeInMB) {
+	expectedDiskSize := (disks[0].Size + sizeInMB) / 1024
+	if disk.Size != expectedDiskSize {
 		t.Errorf("Error, expected disk size %dGB, got a size of %dGB instead",
 			disks[0].Size+sizeInMB, disk.Size)
 	}
@@ -317,5 +321,70 @@ func TestRenameDisk(t *testing.T) {
 	if disk.Name != newName {
 		t.Errorf("Error, expected disk name to be %s, got '%s' instead",
 			newName, disk.Name)
+	}
+}
+
+func TestDeleteDiskBadID(t *testing.T) {
+	cl, err := client.NewClientv4("", "1234")
+	testHosting := Newv4Hosting(cl)
+
+	disk := Disk{
+		ID: "ThisisnotAnID",
+	}
+	err = testHosting.DeleteDisk(disk)
+	if err == nil {
+		t.Errorf("Error, expected error when parsing ID")
+	}
+}
+
+func TestCreateDiskBadRegionID(t *testing.T) {
+	cl, err := client.NewClientv4("", "1234")
+	testHosting := Newv4Hosting(cl)
+
+	diskspec := DiskSpec{
+		RegionID: "ThisisnotAnID",
+	}
+	_, err = testHosting.CreateDisk(diskspec)
+	if err == nil {
+		t.Errorf("Error, expected error when parsing ID")
+	}
+}
+
+func TestFilterDisksBadID(t *testing.T) {
+	cl, err := client.NewClientv4("", "1234")
+	testHosting := Newv4Hosting(cl)
+
+	filter := DiskFilter{
+		ID: "ThisisnotAnID",
+	}
+	_, err = testHosting.DescribeDisks(filter)
+	if err == nil {
+		t.Errorf("Error, expected error when parsing ID")
+	}
+}
+
+func TestFilterDisksBadRegionID(t *testing.T) {
+	cl, err := client.NewClientv4("", "1234")
+	testHosting := Newv4Hosting(cl)
+
+	filter := DiskFilter{
+		RegionID: "ThisisnotAnID",
+	}
+	_, err = testHosting.DescribeDisks(filter)
+	if err == nil {
+		t.Errorf("Error, expected error when parsing ID")
+	}
+}
+
+func TestFilterDisksBadVMID(t *testing.T) {
+	cl, err := client.NewClientv4("", "1234")
+	testHosting := Newv4Hosting(cl)
+
+	filter := DiskFilter{
+		VMID: "ThisisnotAnID",
+	}
+	_, err = testHosting.DescribeDisks(filter)
+	if err == nil {
+		t.Errorf("Error, expected error when parsing ID")
 	}
 }
