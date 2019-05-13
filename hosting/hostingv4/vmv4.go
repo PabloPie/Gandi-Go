@@ -510,13 +510,18 @@ func (h Hostingv4) createVMFromVMSpecMap(vmspecmap map[string]interface{}) (int,
 		return -1, err
 	}
 
-	if err := h.waitForOp(response[1]); err != nil {
+	operation := response[0]
+	if len(response) > 1 {
+		operation = response[1]
+	}
+
+	if err := h.waitForOp(operation); err != nil {
 		return -1, err
 	}
 
-	log.Printf("[INFO] VM %s(ID: %d) created!", vmspecmap["hostname"], response[1].VMID)
+	log.Printf("[INFO] VM %s(ID: %d) created!", vmspecmap["hostname"], operation.VMID)
 
-	return response[1].VMID, nil
+	return operation.VMID, nil
 }
 
 // Internal functions for type conversion
