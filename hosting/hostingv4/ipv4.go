@@ -35,17 +35,17 @@ func (h Hostingv4) CreateIP(region Region, version hosting.IPVersion) (IPAddress
 
 	var err error
 	var iip iPAddressv4
-	var region_id_int int
+	var regionID int
 	var response = Operation{}
 
-	region_id_int, err = strconv.Atoi(region.ID)
+	regionID, err = strconv.Atoi(region.ID)
 	if err != nil {
 		return IPAddress{}, internalParseError("Region", "ID")
 	}
 
 	err = h.Send("hosting.iface.create", []interface{}{
 		map[string]interface{}{
-			"datacenter_id": region_id_int,
+			"datacenter_id": regionID,
 			"ip_version":    int(version),
 			"bandwidth":     hosting.DefaultBandwidth,
 		}}, &response)
