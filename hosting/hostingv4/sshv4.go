@@ -69,7 +69,8 @@ func (h Hostingv4) ListKeys() []SSHKey {
 
 	var keys = []SSHKey{}
 	for _, key := range response {
-		keys = append(keys, toSSHKey(key))
+		fullkey := h.keyFromID(key.ID)
+		keys = append(keys, fullkey)
 	}
 	return keys
 }

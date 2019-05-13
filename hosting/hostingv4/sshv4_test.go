@@ -137,8 +137,19 @@ func TestListKeys(t *testing.T) {
 		Fingerprint: fingerprint,
 		Name:        keyname,
 	}}
-	mockClient.EXPECT().Send("hosting.ssh.list",
+	list := mockClient.EXPECT().Send("hosting.ssh.list",
 		paramsListKey, gomock.Any()).SetArg(2, responseListKeys).Return(nil)
+
+	paramsInfoKey := []interface{}{keyid}
+	responseInfoKey := sshkeyv4{
+		ID:          keyid,
+		Fingerprint: fingerprint,
+		Name:        keyname,
+		Value:       keyvalue,
+	}
+
+	mockClient.EXPECT().Send("hosting.ssh.info",
+		paramsInfoKey, gomock.Any()).SetArg(2, responseInfoKey).Return(nil).After(list)
 
 	keys := testHosting.ListKeys()
 
