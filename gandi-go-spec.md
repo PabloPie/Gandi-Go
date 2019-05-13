@@ -18,6 +18,8 @@ Design proposal for Gandi Hosting GO driver
 
 # Problematiques
 	- Shared structures for v4 and v5(= abstraction of the underlying objects to create a common representation)
+	- IDs ( uuid in v5 vs int in v4 ) type conversion problems (= using strings for almost everything)
 	- sync vs async (= waiting for creation operations to end)
+	       async => Pointer vs value receiver(= immutability and concurrency problems)
 	- Interfaces for unit testing (+ shared client interface for v4 and v5?)
-	- Pointer vs value receiver(= immutability and concurrency problems)
+                -> need a wrapper to mock api calls
