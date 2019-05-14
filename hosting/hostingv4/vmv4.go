@@ -190,18 +190,24 @@ func (h Hostingv4) CreateVM(vm VMSpec, image DiskImage, version hosting.IPVersio
 // AttachDisk attaches a Disk to a VM, both objects must already exist
 func (h Hostingv4) AttachDisk(vm VM, disk Disk) (VM, Disk, error) {
 	var fn = "disk_attach"
-	return h.diskAttachDetach(vm, disk, fn)
+	return h.diskAttachDetach(vm, disk, fn, false)
+}
+
+// ChangeBootDisk attaches or swaps a Disk to a VM as the boot disk, both objects must already exist
+func (h Hostingv4) ChangeBootDisk(vm VM, disk Disk) (VM, Disk, error) {
+	var fn = "disk_attach"
+	return h.diskAttachDetach(vm, disk, fn, true)
 }
 
 // DetachDisk detaches a Disk from a VM, will fail if it is a boot Disk
 func (h Hostingv4) DetachDisk(vm VM, disk Disk) (VM, Disk, error) {
 	var fn = "disk_detach"
-	return h.diskAttachDetach(vm, disk, fn)
+	return h.diskAttachDetach(vm, disk, fn, false)
 }
 
 // Attach and detach operations on a disk are almost identical, using a common function
 // reduces significantly code size, the variable `op` determines which operation we are calling
-func (h Hostingv4) diskAttachDetach(vm VM, disk Disk, op string) (VM, Disk, error) {
+func (h Hostingv4) diskAttachDetach(vm VM, disk Disk, op string, is_boot bool) (VM, Disk, error) {
 	if vm.RegionID != disk.RegionID {
 		return VM{}, Disk{}, &HostingError{op, "VM/Disk", "RegionID", ErrMismatch}
 	}
@@ -215,6 +221,11 @@ func (h Hostingv4) diskAttachDetach(vm VM, disk Disk, op string) (VM, Disk, erro
 	}
 
 	params := []interface{}{vmid, diskid}
+	
+	if op == "disk_attach" && is_boot {
+		params = append(params,map[string]interface{}{"position": 0})
+	}
+	
 	response := Operation{}
 	err = h.Send("hosting.vm."+op, params, &response)
 	if err != nil {
