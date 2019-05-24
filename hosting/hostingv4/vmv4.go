@@ -1,6 +1,7 @@
 package hostingv4
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"strconv"
@@ -26,7 +27,6 @@ type vmv4 struct {
 	DateCreated time.Time `xmlrpc:"date_created"`
 	Ifaces      []iface   `xmlrpc:"ifaces"`
 	Disks       []diskv4  `xmlrpc:"disks"`
-	SSHKeysID   []int     `xmlrpc:"keys"`
 	State       string    `xmlrpc:"state"`
 }
 
@@ -53,7 +53,7 @@ type vmFilterv4 struct {
 // that is, their IDs already exist. All 3 objects must reside in the same Region.
 // `VMSpec.RegionID` is the only mandatory parameter for the VM.
 func (h Hostingv4) CreateVMWithExistingDiskAndIP(vm VMSpec, ip IPAddress, disk Disk) (VM, IPAddress, Disk, error) {
-	vmspecmap, ipid, diskid, _, err := checkParametersAndGetVMSpecMap("CreateVMWithExistingDiskAndIP", vm, &ip, &disk, nil)
+	vmspecmap, ipid, diskid, _, err := h.checkParametersAndGetVMSpecMap("CreateVMWithExistingDiskAndIP", vm, &ip, &disk, nil)
 	if err != nil {
 		return VM{}, IPAddress{}, Disk{}, err
 	}
@@ -73,6 +73,7 @@ func (h Hostingv4) CreateVMWithExistingDiskAndIP(vm VMSpec, ip IPAddress, disk D
 	}
 
 	vmRes, err := h.vmFromID(vmid)
+	vmRes.SSHKeysID = vm.SSHKeysID
 	if err != nil {
 		return VM{}, IPAddress{}, Disk{}, err
 	}
@@ -84,7 +85,7 @@ func (h Hostingv4) CreateVMWithExistingDiskAndIP(vm VMSpec, ip IPAddress, disk D
 // will be created in this region.
 // `VMSpec.RegionID` is the only mandatory parameter for the VM.
 func (h Hostingv4) CreateVMWithExistingDisk(vm VMSpec, version hosting.IPVersion, disk Disk) (VM, IPAddress, Disk, error) {
-	vmspecmap, _, diskid, _, err := checkParametersAndGetVMSpecMap("CreateVMWithExistingDisk", vm, nil, &disk, nil)
+	vmspecmap, _, diskid, _, err := h.checkParametersAndGetVMSpecMap("CreateVMWithExistingDisk", vm, nil, &disk, nil)
 	if err != nil {
 		return VM{}, IPAddress{}, Disk{}, err
 	}
@@ -99,6 +100,7 @@ func (h Hostingv4) CreateVMWithExistingDisk(vm VMSpec, version hosting.IPVersion
 	}
 
 	vmRes, err := h.vmFromID(vmid)
+	vmRes.SSHKeysID = vm.SSHKeysID
 	if err != nil {
 		return VM{}, IPAddress{}, Disk{}, err
 	}
@@ -109,7 +111,7 @@ func (h Hostingv4) CreateVMWithExistingDisk(vm VMSpec, version hosting.IPVersion
 // All three objects must be in the same Region, the new disk will be created in the same region
 // `VMSpec.RegionID` is the only mandatory parameter for VM creation
 func (h Hostingv4) CreateVMWithExistingIP(vm VMSpec, image DiskImage, ip IPAddress, diskSize uint) (VM, IPAddress, Disk, error) {
-	vmspecmap, ipid, _, imageid, err := checkParametersAndGetVMSpecMap("CreateVMWithExistingIP", vm, &ip, nil, &image)
+	vmspecmap, ipid, _, imageid, err := h.checkParametersAndGetVMSpecMap("CreateVMWithExistingIP", vm, &ip, nil, &image)
 	if err != nil {
 		return VM{}, IPAddress{}, Disk{}, err
 	}
@@ -143,6 +145,7 @@ func (h Hostingv4) CreateVMWithExistingIP(vm VMSpec, image DiskImage, ip IPAddre
 	}
 	log.Printf("[INFO] VM %s(ID: %d) created!", vmspecmap["hostname"], response[2].VMID)
 	vmRes, err := h.vmFromID(vmop.ID)
+	vmRes.SSHKeysID = vm.SSHKeysID
 	if err != nil {
 		return VM{}, IPAddress{}, Disk{}, err
 	}
@@ -152,7 +155,7 @@ func (h Hostingv4) CreateVMWithExistingIP(vm VMSpec, image DiskImage, ip IPAddre
 // CreateVM creates a VM together with its system disk and an ip address
 // `VMSpec.RegionID` is the only mandatory parameter for VM creation
 func (h Hostingv4) CreateVM(vm VMSpec, image DiskImage, version hosting.IPVersion, diskSize uint) (VM, IPAddress, Disk, error) {
-	vmspecmap, _, _, imageid, err := checkParametersAndGetVMSpecMap("CreateVMWithExistingIP", vm, nil, nil, &image)
+	vmspecmap, _, _, imageid, err := h.checkParametersAndGetVMSpecMap("CreateVMWithExistingIP", vm, nil, nil, &image)
 	if err != nil {
 		return VM{}, IPAddress{}, Disk{}, err
 	}
@@ -181,6 +184,7 @@ func (h Hostingv4) CreateVM(vm VMSpec, image DiskImage, version hosting.IPVersio
 	}
 	log.Printf("[INFO] VM %s(ID: %d) created!", vmspecmap["hostname"], response[2].VMID)
 	vmRes, err := h.vmFromID(vmop.ID)
+	vmRes.SSHKeysID = vm.SSHKeysID
 	if err != nil {
 		return VM{}, IPAddress{}, Disk{}, err
 	}
@@ -340,7 +344,6 @@ func (h Hostingv4) DescribeVM(vmfilter VMFilter) ([]VM, error) {
 		return nil, err
 	}
 	filter, _ := structToMap(filterv4)
-
 	response := []vmv4{}
 	params := []interface{}{}
 	if len(filter) > 0 {
@@ -368,15 +371,18 @@ func (h Hostingv4) DescribeVM(vmfilter VMFilter) ([]VM, error) {
 
 // VMFromName is a helper function to get a VM given its name
 func (h Hostingv4) VMFromName(name string) (VM, error) {
-	disks, err := h.DescribeVM(VMFilter{Hostname: name})
+	if name == "" {
+		return VM{}, &HostingError{"VMFromName", "-", "name", ErrNotProvided}
+	}
+	vms, err := h.DescribeVM(VMFilter{Hostname: name})
 	if err != nil {
 		return VM{}, err
 	}
-	if len(disks) < 1 {
+	if len(vms) < 1 {
 		return VM{}, fmt.Errorf("VM '%s' does not exist", name)
 	}
 
-	return disks[0], nil
+	return vms[0], nil
 }
 
 // ListVMs lists every VM
@@ -443,7 +449,7 @@ func (h Hostingv4) vmFromID(vmid int) (VM, error) {
 
 // Internal functions for creation
 
-func checkParametersAndGetVMSpecMap(fn string,
+func (h Hostingv4) checkParametersAndGetVMSpecMap(fn string,
 	vm VMSpec, ip *IPAddress, disk *Disk, image *DiskImage) (map[string]interface{}, int, int, int, error) {
 	var ipid int
 	var diskid int
@@ -493,7 +499,7 @@ func checkParametersAndGetVMSpecMap(fn string,
 		}
 	}
 
-	vmspec, err := toVMSpecv4(vm)
+	vmspec, err := h.toVMSpecv4(vm)
 	if err != nil {
 		return nil, diskid, ipid, imageid, err
 	}
@@ -546,23 +552,19 @@ func toVMFilterv4(vmfilter VMFilter) (vmFilterv4, error) {
 	}, nil
 }
 
-func toVMSpecv4(vm VMSpec) (vmSpecv4, error) {
+func (h Hostingv4) toVMSpecv4(vm VMSpec) (vmSpecv4, error) {
 	regionid, err := strconv.Atoi(vm.RegionID)
 	if err != nil {
 		return vmSpecv4{}, internalParseError("VMSpec", "RegionID")
 	}
 	var keys []int
-	var errkey bool
 	for _, key := range vm.SSHKeysID {
-		keyid, err := strconv.Atoi(key)
+		sshkey := h.KeyFromName(key)
+		keyid, err := strconv.Atoi(sshkey.ID)
 		if err != nil {
-			errkey = true
-			break
+			return vmSpecv4{}, errors.New("Key '" + key + "' does not exist")
 		}
 		keys = append(keys, keyid)
-	}
-	if errkey {
-		return vmSpecv4{}, internalParseError("VMSpec", "SSHKeysID")
 	}
 	return vmSpecv4{
 		RegionID:  regionid,
@@ -576,6 +578,7 @@ func toVMSpecv4(vm VMSpec) (vmSpecv4, error) {
 	}, nil
 }
 
+// API does not return keys added to vm, how to get them?
 func fromVMv4(vm vmv4) VM {
 	id := strconv.Itoa(vm.ID)
 	regionid := strconv.Itoa(vm.RegionID)
@@ -590,10 +593,6 @@ func fromVMv4(vm vmv4) VM {
 	for _, disk := range vm.Disks {
 		disks = append(disks, fromDiskv4(disk))
 	}
-	var keys []string
-	for _, key := range vm.SSHKeysID {
-		keys = append(keys, strconv.Itoa(key))
-	}
 	return VM{
 		ID:          id,
 		Hostname:    vm.Hostname,
@@ -605,6 +604,5 @@ func fromVMv4(vm vmv4) VM {
 		DateCreated: vm.DateCreated,
 		Ips:         ips,
 		Disks:       disks,
-		SSHKeysID:   keys,
 		State:       vm.State}
 }

@@ -25,13 +25,26 @@ func TestCreateVM(t *testing.T) {
 
 	now := time.Now()
 
+	paramsKeyList := []interface{}{
+		map[string]string{
+			"name": "key1",
+		}}
+	responseKeyList := []sshkeyv4{{ID: 1}}
+	keylist := mockClient.EXPECT().Send("hosting.ssh.list",
+		paramsKeyList, gomock.Any()).SetArg(2, responseKeyList).Return(nil)
+
+	paramsKeyInfo := []interface{}{1}
+	responseKeyInfo := sshkeyv4{ID: 1}
+	keyinfo := mockClient.EXPECT().Send("hosting.ssh.info",
+		paramsKeyInfo, gomock.Any()).SetArg(2, responseKeyInfo).Return(nil).After(keylist)
+
 	paramsVMCreate := []interface{}{
 		map[string]interface{}{
 			"ip_version":    4,
 			"bandwidth":     hosting.DefaultBandwidth,
 			"datacenter_id": region,
 			"hostname":      vmname,
-			"keys":          []int{1, 2, 3},
+			"keys":          []int{1},
 		},
 		map[string]interface{}{
 			"datacenter_id": region,
@@ -39,7 +52,7 @@ func TestCreateVM(t *testing.T) {
 		}, imageid}
 	responseVMCreate := []Operation{{}, {}, {ID: 1, VMID: vmid}}
 	creation := mockClient.EXPECT().Send("hosting.vm.create_from",
-		paramsVMCreate, gomock.Any()).SetArg(2, responseVMCreate).Return(nil)
+		paramsVMCreate, gomock.Any()).SetArg(2, responseVMCreate).Return(nil).After(keyinfo)
 
 	paramsWait := []interface{}{responseVMCreate[2].ID}
 	responseWait := operationInfo{responseVMCreate[2].ID, "DONE"}
@@ -50,14 +63,14 @@ func TestCreateVM(t *testing.T) {
 	ipsresponse := []iPAddressv4{{1, "192.168.1.1", region, 4, vmid, "used"}}
 	ifaceresponse := []iface{{ipsresponse, region, 1, vmid}}
 	diskresponse := []diskv4{{1, "sysdisk_1", disksizeMB, region, "created", "data", []int{vmid}, true}}
-	responseVMInfo := vmv4{vmid, vmname, region, "", "", 1, 512, now, ifaceresponse, diskresponse, []int{1, 2, 3}, "running"}
+	responseVMInfo := vmv4{vmid, vmname, region, "", "", 1, 512, now, ifaceresponse, diskresponse, "running"}
 	mockClient.EXPECT().Send("hosting.vm.info",
 		paramsVMInfo, gomock.Any()).SetArg(2, responseVMInfo).Return(nil).After(wait)
 
 	vmspec := VMSpec{
 		RegionID:  regionstr,
 		Hostname:  vmname,
-		SSHKeysID: []string{"1", "2", "3"},
+		SSHKeysID: []string{"key1"},
 	}
 	diskimage := DiskImage{
 		DiskID:   imageidstr,
@@ -83,7 +96,7 @@ func TestCreateVM(t *testing.T) {
 		DateCreated: now,
 		Ips:         expectedIPS,
 		Disks:       expectedDisks,
-		SSHKeysID:   []string{"1", "2", "3"},
+		SSHKeysID:   []string{"key1"},
 		State:       "running",
 	}
 
@@ -127,7 +140,7 @@ func TestCreateVMWithExistingIP(t *testing.T) {
 	ipsresponse := []iPAddressv4{{1, "192.168.1.1", region, 4, vmid, "used"}}
 	ifaceresponse := []iface{{ipsresponse, region, 10, vmid}}
 	diskresponse := []diskv4{{1, "sysdisk_1", disksizeMB, region, "created", "data", []int{vmid}, true}}
-	responseVMInfo := vmv4{vmid, vmname, region, "", "", 1, 512, now, ifaceresponse, diskresponse, []int{1, 2, 3}, "running"}
+	responseVMInfo := vmv4{vmid, vmname, region, "", "", 1, 512, now, ifaceresponse, diskresponse, "running"}
 	mockClient.EXPECT().Send("hosting.vm.info",
 		paramsVMInfo, gomock.Any()).SetArg(2, responseVMInfo).Return(nil).After(wait)
 
@@ -166,7 +179,6 @@ func TestCreateVMWithExistingIP(t *testing.T) {
 		DateCreated: now,
 		Ips:         expectedIPS,
 		Disks:       expectedDisks,
-		SSHKeysID:   []string{"1", "2", "3"},
 		State:       "running",
 	}
 
@@ -208,7 +220,7 @@ func TestCreateVMWithExistingDiskAndIP(t *testing.T) {
 	ipsresponse := []iPAddressv4{{1, "192.168.1.1", region, 4, vmid, "used"}}
 	ifaceresponse := []iface{{ipsresponse, region, 10, vmid}}
 	diskresponse := []diskv4{{1, "sysdisk_1", disksizeMB, region, "created", "data", []int{vmid}, true}}
-	responseVMInfo := vmv4{vmid, vmname, region, "", "", 1, 512, now, ifaceresponse, diskresponse, []int{1, 2, 3}, "running"}
+	responseVMInfo := vmv4{vmid, vmname, region, "", "", 1, 512, now, ifaceresponse, diskresponse, "running"}
 	mockClient.EXPECT().Send("hosting.vm.info",
 		paramsVMInfo, gomock.Any()).SetArg(2, responseVMInfo).Return(nil).After(wait)
 
@@ -245,7 +257,6 @@ func TestCreateVMWithExistingDiskAndIP(t *testing.T) {
 		DateCreated: now,
 		Ips:         expectedIPS,
 		Disks:       expectedDisks,
-		SSHKeysID:   []string{"1", "2", "3"},
 		State:       "running",
 	}
 
@@ -276,7 +287,7 @@ func TestDiskDetach(t *testing.T) {
 	ipsresponse := []iPAddressv4{{2, "192.168.1.1", region, 4, 3, "used"}}
 	ifaceresponse := []iface{{ipsresponse, region, 2, 3}}
 	diskresponse := []diskv4{{1, "sysdisk_1", disksizeMB, region, "created", "data", []int{3}, true}}
-	responseVMInfo := vmv4{3, vmname, region, "", "", 1, 512, now, ifaceresponse, diskresponse, []int{1, 2, 3}, "running"}
+	responseVMInfo := vmv4{3, vmname, region, "", "", 1, 512, now, ifaceresponse, diskresponse, "running"}
 	info := mockClient.EXPECT().Send("hosting.vm.info",
 		paramsVMInfo, gomock.Any()).SetArg(2, responseVMInfo).Return(nil).After(wait)
 
@@ -331,7 +342,7 @@ func TestIPDetach(t *testing.T) {
 	ipsresponse := []iPAddressv4{{2, "192.168.1.1", region, 4, 3, "used"}}
 	ifaceresponse := []iface{{ipsresponse, region, 2, vmid}}
 	diskresponse := []diskv4{{1, "sysdisk_1", disksizeMB, region, "created", "data", []int{vmid}, true}}
-	responseVMInfo := vmv4{vmid, vmname, region, "", "", 1, 512, now, ifaceresponse, diskresponse, []int{1, 2, 3}, "running"}
+	responseVMInfo := vmv4{vmid, vmname, region, "", "", 1, 512, now, ifaceresponse, diskresponse, "running"}
 	info := mockClient.EXPECT().Send("hosting.vm.info",
 		paramsVMInfo, gomock.Any()).SetArg(2, responseVMInfo).Return(nil).After(wait)
 
@@ -411,7 +422,7 @@ func TestCreateVMWithExistingDisk(t *testing.T) {
 	ipsresponse := []iPAddressv4{{1, "192.168.1.1", region, 4, vmid, "used"}}
 	ifaceresponse := []iface{{ipsresponse, region, 1, vmid}}
 	diskresponse := []diskv4{{5, "sysdisk_1", disksizeMB, region, "created", "data", []int{vmid}, true}}
-	responseVMInfo := vmv4{vmid, vmname, region, "", "", 1, 512, now, ifaceresponse, diskresponse, []int{1, 2, 3}, "running"}
+	responseVMInfo := vmv4{vmid, vmname, region, "", "", 1, 512, now, ifaceresponse, diskresponse, "running"}
 	mockClient.EXPECT().Send("hosting.vm.info",
 		paramsVMInfo, gomock.Any()).SetArg(2, responseVMInfo).Return(nil).After(wait)
 
@@ -448,7 +459,6 @@ func TestCreateVMWithExistingDisk(t *testing.T) {
 		DateCreated: now,
 		Ips:         expectedIPS,
 		Disks:       expectedDisks,
-		SSHKeysID:   []string{"1", "2", "3"},
 		State:       "running",
 	}
 
@@ -474,7 +484,7 @@ func TestVMFromName(t *testing.T) {
 	ipsresponse := []iPAddressv4{{1, "192.168.1.1", region, 4, vmid, "used"}}
 	ifaceresponse := []iface{{ipsresponse, region, 1, vmid}}
 	diskresponse := []diskv4{{5, "sysdisk_1", disksizeMB, region, "created", "data", []int{vmid}, true}}
-	responseVMInfo := vmv4{vmid, vmname, region, "", "", 1, 512, now, ifaceresponse, diskresponse, []int{1, 2, 3}, "running"}
+	responseVMInfo := vmv4{vmid, vmname, region, "", "", 1, 512, now, ifaceresponse, diskresponse, "running"}
 	mockClient.EXPECT().Send("hosting.vm.info",
 		paramsVMInfo, gomock.Any()).SetArg(2, responseVMInfo).Return(nil).After(list)
 
@@ -493,7 +503,6 @@ func TestVMFromName(t *testing.T) {
 		DateCreated: now,
 		Ips:         expectedIPS,
 		Disks:       expectedDisks,
-		SSHKeysID:   []string{"1", "2", "3"},
 		State:       "running",
 	}
 
@@ -524,7 +533,7 @@ func TestRenameVM(t *testing.T) {
 	ipsresponse := []iPAddressv4{{1, "192.168.1.1", region, 4, vmid, "used"}}
 	ifaceresponse := []iface{{ipsresponse, region, 1, vmid}}
 	diskresponse := []diskv4{{5, "sysdisk_1", disksizeMB, region, "created", "data", []int{vmid}, true}}
-	responseVMInfo := vmv4{vmid, "NEWNAME", region, "", "", 1, 512, now, ifaceresponse, diskresponse, []int{1, 2, 3}, "running"}
+	responseVMInfo := vmv4{vmid, "NEWNAME", region, "", "", 1, 512, now, ifaceresponse, diskresponse, "running"}
 	mockClient.EXPECT().Send("hosting.vm.info",
 		paramsVMInfo, gomock.Any()).SetArg(2, responseVMInfo).Return(nil).After(wait)
 
@@ -544,7 +553,6 @@ func TestRenameVM(t *testing.T) {
 		DateCreated: now,
 		Ips:         expectedIPS,
 		Disks:       expectedDisks,
-		SSHKeysID:   []string{"1", "2", "3"},
 		State:       "running",
 	}
 
