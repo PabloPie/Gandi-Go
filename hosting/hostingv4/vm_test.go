@@ -3,6 +3,7 @@ package hostingv4
 import (
 	"log"
 	"reflect"
+	"strconv"
 	"testing"
 	"time"
 
@@ -312,6 +313,64 @@ func TestDiskDetach(t *testing.T) {
 
 	if len(vmres.Disks) != len(expected.Disks) {
 		t.Errorf("Error, number of disks does not match, expected %v, got %v instead", expected.Disks, vmres.Disks)
+	}
+}
+
+func TestDiskAttachAtPosition(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockClient := mock.NewMockV4Caller(mockCtrl)
+	testHosting := Newv4Hosting(mockClient)
+
+	vmid := 666
+	vmidStr := strconv.Itoa(vmid)
+
+	disks := []Disk{
+		{"1", "d1", disksize, regionstr, "created", "data", []string{vmidStr}, true},
+		{"2", "d2", disksize, regionstr, "created", "data", []string{vmidStr}, true},
+		{"3", "d3", disksize, regionstr, "created", "data", []string{vmidStr}, true},
+	}
+	diskid := 3
+	diskidStr := strconv.Itoa(diskid)
+	disk := Disk{ID: diskidStr}
+
+	position := 0
+
+	vm := VM{ID: vmidStr, Disks: []Disk{disks[0], disks[1], disks[2]}}
+	expectedVm := VM{ID: vmidstr, Disks: []Disk{disks[2], disks[1], disks[0]}}
+
+	parameters := []interface{}{vmid, diskid, map[string]interface{}{"position": position}}
+	response := Operation{ID: 1337, DiskID: diskid, VMID: vmid}
+
+	attach := mockClient.EXPECT().Send("hosting.vm.disk_attach",
+		parameters, gomock.Any()).SetArg(2, response).Return(nil)
+
+	paramsWait := []interface{}{response.ID}
+	responseWait := operationInfo{response.ID, "DONE"}
+
+	wait := mockClient.EXPECT().Send("operation.info",
+		paramsWait, gomock.Any()).SetArg(2, responseWait).Return(nil).After(attach)
+
+	paramsVMInfo := []interface{}{response.VMID}
+
+	diskresponse := []diskv4{{3, "d3", disksizeMB, region, "created", "data", []int{vmid}, true},
+		{2, "d2", disksizeMB, region, "created", "data", []int{vmid}, true},
+		{1, "d1", disksizeMB, region, "created", "data", []int{vmid}, true},
+	}
+
+	responseVMInfo := vmv4{Disks: diskresponse}
+	info := mockClient.EXPECT().Send("hosting.vm.info",
+		paramsVMInfo, gomock.Any()).SetArg(2, responseVMInfo).Return(nil).After(wait)
+
+	mockClient.EXPECT().Send("hosting.disk.info",
+		[]interface{}{3}, gomock.Any()).SetArg(2, diskresponse[0]).Return(nil).After(info)
+
+	vmres, _, _ := testHosting.AttachDiskAtPosition(vm, disk, position)
+
+	for i, _ := range vmres.Disks {
+		if expectedVm.Disks[i].ID != vmres.Disks[i].ID {
+			t.Errorf("Error, disk %d does not match, expected %v, got %v instead", i, expectedVm.Disks[i], vmres.Disks[i])
+		}
 	}
 }
 
