@@ -12,7 +12,7 @@ type VMManager interface {
 	CreateVMWithExistingDiskAndIP(vm VMSpec, ip IPAddress, disk Disk) (VM, IPAddress, Disk, error)
 
 	AttachDisk(vm VM, disk Disk) (VM, Disk, error)
-	ChangeBootDisk(vm VM, disk Disk) (VM, Disk, error)
+	AttachDiskAtPosition(vm VM, disk Disk, position int) (VM, Disk, error)
 	DetachDisk(vm VM, disk Disk) (VM, Disk, error)
 	AttachIP(vm VM, ip IPAddress) (VM, IPAddress, error)
 	DetachIP(vm VM, ip IPAddress) (VM, IPAddress, error)
