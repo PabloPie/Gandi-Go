@@ -3,9 +3,9 @@ package hostingv4
 import (
 	"log"
 	"reflect"
+	"strconv"
 	"testing"
 	"time"
-	"strconv"
 
 	"github.com/PabloPie/Gandi-Go/hosting"
 	"github.com/PabloPie/Gandi-Go/mock"
@@ -326,8 +326,7 @@ func TestDiskAttachAtPosition(t *testing.T) {
 	position := 0
 
 	vm := VM{ID: vmidStr, Disks: []Disk{disks[0], disks[1], disks[2]}}
-	expectedVm := VM{ID : vmidstr, Disks : []Disk{disks[2], disks[1], disks[0]},}
-
+	expectedVm := VM{ID: vmidstr, Disks: []Disk{disks[2], disks[1], disks[0]}}
 
 	parameters := []interface{}{vmid, diskid, map[string]interface{}{"position": position}}
 	response := Operation{ID: 1337, DiskID: diskid, VMID: vmid}
@@ -344,8 +343,8 @@ func TestDiskAttachAtPosition(t *testing.T) {
 	paramsVMInfo := []interface{}{response.VMID}
 
 	diskresponse := []diskv4{{3, "d3", disksizeMB, region, "created", "data", []int{vmid}, true},
-							{2, "d2", disksizeMB, region, "created", "data", []int{vmid}, true},
-							{1, "d1", disksizeMB, region, "created", "data", []int{vmid}, true},
+		{2, "d2", disksizeMB, region, "created", "data", []int{vmid}, true},
+		{1, "d1", disksizeMB, region, "created", "data", []int{vmid}, true},
 	}
 
 	responseVMInfo := vmv4{Disks: diskresponse}
@@ -356,10 +355,10 @@ func TestDiskAttachAtPosition(t *testing.T) {
 		[]interface{}{3}, gomock.Any()).SetArg(2, diskresponse[0]).Return(nil).After(info)
 
 	vmres, _, _ := testHosting.AttachDiskAtPosition(vm, disk, position)
-	
+
 	for i, _ := range vmres.Disks {
 		if expectedVm.Disks[i].ID != vmres.Disks[i].ID {
-			t.Errorf("Error, disk %d does not match, expected %v, got %v instead", i ,expectedVm.Disks[i], vmres.Disks[i])
+			t.Errorf("Error, disk %d does not match, expected %v, got %v instead", i, expectedVm.Disks[i], vmres.Disks[i])
 		}
 	}
 }

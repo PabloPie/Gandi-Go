@@ -221,11 +221,11 @@ func (h Hostingv4) diskAttachDetach(vm VM, disk Disk, op string, position int) (
 	}
 
 	params := []interface{}{vmid, diskid}
-	
+
 	if op == "disk_attach" && position >= 0 {
-		params = append(params,map[string]interface{}{"position": position})
+		params = append(params, map[string]interface{}{"position": position})
 	}
-	
+
 	response := Operation{}
 	err = h.Send("hosting.vm."+op, params, &response)
 	if err != nil {
