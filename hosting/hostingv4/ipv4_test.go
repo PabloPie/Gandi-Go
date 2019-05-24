@@ -6,10 +6,10 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/PabloPie/Gandi-Go/client"
+	"github.com/PabloPie/go-gandi/client"
 
-	"github.com/PabloPie/Gandi-Go/hosting"
-	"github.com/PabloPie/Gandi-Go/mock"
+	"github.com/PabloPie/go-gandi/hosting"
+	"github.com/PabloPie/go-gandi/mock"
 	"github.com/golang/mock/gomock"
 )
 

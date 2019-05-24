@@ -1,4 +1,4 @@
-module github.com/PabloPie/Gandi-Go
+module github.com/PabloPie/go-gandi
 
 require (
 	github.com/golang/mock v1.3.1

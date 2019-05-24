@@ -5,7 +5,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/PabloPie/Gandi-Go/mock"
+	"github.com/PabloPie/go-gandi/mock"
 	"github.com/golang/mock/gomock"
 )
 

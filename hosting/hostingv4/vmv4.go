@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/PabloPie/Gandi-Go/hosting"
+	"github.com/PabloPie/go-gandi/hosting"
 )
 
 type (

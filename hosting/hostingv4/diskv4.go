@@ -4,7 +4,7 @@ import (
 	"log"
 	"strconv"
 
-	"github.com/PabloPie/Gandi-Go/hosting"
+	"github.com/PabloPie/go-gandi/hosting"
 )
 
 type (

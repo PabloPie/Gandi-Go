@@ -3,7 +3,7 @@ package hostingv4
 import (
 	"strconv"
 
-	"github.com/PabloPie/Gandi-Go/hosting"
+	"github.com/PabloPie/go-gandi/hosting"
 )
 
 type SSHKey = hosting.SSHKey

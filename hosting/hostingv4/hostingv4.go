@@ -5,8 +5,8 @@ import (
 	"reflect"
 	"strconv"
 
-	"github.com/PabloPie/Gandi-Go/client"
-	"github.com/PabloPie/Gandi-Go/hosting"
+	"github.com/PabloPie/go-gandi/client"
+	"github.com/PabloPie/go-gandi/hosting"
 )
 
 // ErrNotProvided indicates that a value was not provided but was needed
