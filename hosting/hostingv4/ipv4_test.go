@@ -20,21 +20,21 @@ var (
 	testVersion         = hosting.IPv4
 	nbTestRegionVersion = 2
 	ipsv4               = []iPAddressv4{
-		iPAddressv4{ID: 100, IP: "192.168.0.1", RegionID: 123, Version: 4, VM: 0, State: "created"},
-		iPAddressv4{ID: 102, IP: "2001:4b98::DEAD", RegionID: 123, Version: 6, VM: 0, State: "created"},
-		iPAddressv4{ID: 154, IP: "2001:4b98::BABE", RegionID: 456, Version: 6, VM: 0, State: "being_created"},
-		iPAddressv4{ID: 154, IP: "2001:B00B::1337", RegionID: 456, Version: 6, VM: 0, State: "free"},
-		iPAddressv4{ID: 111, IP: "192.168.0.10", RegionID: 123, Version: 4, VM: 0, State: "created"},
-		iPAddressv4{ID: 115, IP: "192.168.5.20", RegionID: 789, Version: 4, VM: 0, State: "created"},
-		iPAddressv4{ID: 116, IP: "192.168.44.30", RegionID: 789, Version: 4, VM: 0, State: "created"},
-		iPAddressv4{ID: 117, IP: "2001:B00B::BOOB", RegionID: 789, Version: 6, VM: 0, State: "created"},
+		{ID: 100, IP: "192.168.0.1", RegionID: 123, Version: 4, VM: 0, State: "created"},
+		{ID: 102, IP: "2001:4b98::DEAD", RegionID: 123, Version: 6, VM: 0, State: "created"},
+		{ID: 154, IP: "2001:4b98::BABE", RegionID: 456, Version: 6, VM: 0, State: "being_created"},
+		{ID: 154, IP: "2001:B00B::1337", RegionID: 456, Version: 6, VM: 0, State: "free"},
+		{ID: 111, IP: "192.168.0.10", RegionID: 123, Version: 4, VM: 0, State: "created"},
+		{ID: 115, IP: "192.168.5.20", RegionID: 789, Version: 4, VM: 0, State: "created"},
+		{ID: 116, IP: "192.168.44.30", RegionID: 789, Version: 4, VM: 0, State: "created"},
+		{ID: 117, IP: "2001:B00B::BOOB", RegionID: 789, Version: 6, VM: 0, State: "created"},
 	}
 )
 
 var regions = []Region{
-	Region{ID: "123", Name: "Datacentre 123", Country: "France"},
-	Region{ID: "456", Name: "Datacenter 456", Country: "United Kingdom"},
-	Region{ID: "789", Name: "Centro de datos 789", Country: "Espana"},
+	{ID: "123", Name: "Datacentre 123", Country: "France"},
+	{ID: "456", Name: "Datacenter 456", Country: "United Kingdom"},
+	{ID: "789", Name: "Centro de datos 789", Country: "Espana"},
 }
 
 /* CreateIP */

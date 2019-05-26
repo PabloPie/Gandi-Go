@@ -10,11 +10,11 @@ import (
 )
 
 var regionsv4 = []regionv4{
-	regionv4{ID: 12, Name: "FR-SD3", Country: "France"},
-	regionv4{ID: 34, Name: "FR-SD6", Country: "France"},
-	regionv4{ID: 56, Name: "EN-DC1", Country: "United Kingdom"},
-	regionv4{ID: 78, Name: "ES-CD5", Country: "Espana"},
-	regionv4{ID: 90, Name: "ES-CD4", Country: "Espana"},
+	{ID: 12, Name: "FR-SD3", Country: "France"},
+	{ID: 34, Name: "FR-SD6", Country: "France"},
+	{ID: 56, Name: "EN-DC1", Country: "United Kingdom"},
+	{ID: 78, Name: "ES-CD5", Country: "Espana"},
+	{ID: 90, Name: "ES-CD4", Country: "Espana"},
 }
 
 func TestListRegions(t *testing.T) {

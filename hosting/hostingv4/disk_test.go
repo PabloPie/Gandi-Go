@@ -28,11 +28,11 @@ var (
 )
 
 var disks = []diskv4{
-	diskv4{1, "sys_disk1", 10240, 4, "created", "data", []int{1}, true},
-	diskv4{4, "sys_disk3", 10240, 4, "created", "data", []int{3}, true},
-	diskv4{2, "sys_disk2", 20480, 3, "created", "data", []int{2}, true},
-	diskv4{3, "disk3", 10240, 3, "created", "data", []int{2}, false},
-	diskv4{5, diskname, 10240, 3, "created", "data", []int{}, false},
+	{1, "sys_disk1", 10240, 4, "created", "data", []int{1}, true},
+	{4, "sys_disk3", 10240, 4, "created", "data", []int{3}, true},
+	{2, "sys_disk2", 20480, 3, "created", "data", []int{2}, true},
+	{3, "disk3", 10240, 3, "created", "data", []int{2}, false},
+	{5, diskname, 10240, 3, "created", "data", []int{}, false},
 }
 
 func TestCreateDiskWithNameSizeAndRegion(t *testing.T) {

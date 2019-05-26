@@ -3,8 +3,8 @@ package hostingv4
 import (
 	"errors"
 	"reflect"
-	"testing"
 	"strconv"
+	"testing"
 
 	"github.com/PabloPie/go-gandi/mock"
 	"github.com/golang/mock/gomock"
@@ -12,11 +12,11 @@ import (
 
 var (
 	images4 = []diskImagev4{
-		diskImagev4{ID: 1, DiskID : 10, RegionID : 123, Name : "Debian", Size : 2048},
-		diskImagev4{ID: 2, DiskID : 11, RegionID : 456, Name : "Debian", Size : 2048},
-		diskImagev4{ID: 4, DiskID : 44, RegionID : 123, Name : "Ubuntu", Size : 8192},
-		diskImagev4{ID: 8, DiskID : 54, RegionID : 456, Name : "Ubuntu", Size : 8192},
-		diskImagev4{ID: 11, DiskID : 98, RegionID : 456, Name : "MS-DOS", Size : 64},
+		{ID: 1, DiskID: 10, RegionID: 123, Name: "Debian", Size: 2048},
+		{ID: 2, DiskID: 11, RegionID: 456, Name: "Debian", Size: 2048},
+		{ID: 4, DiskID: 44, RegionID: 123, Name: "Ubuntu", Size: 8192},
+		{ID: 8, DiskID: 54, RegionID: 456, Name: "Ubuntu", Size: 8192},
+		{ID: 11, DiskID: 98, RegionID: 456, Name: "MS-DOS", Size: 64},
 	}
 )
 
@@ -28,7 +28,7 @@ func TestImageByNameEmptyRegion(t *testing.T) {
 	mockClient := mock.NewMockV4Caller(mockCtrl)
 	testHosting := Newv4Hosting(mockClient)
 
-	_, err := testHosting.ImageByName("Debian",Region{})
+	_, err := testHosting.ImageByName("Debian", Region{})
 	expected := errors.New("Region provided does not have an ID")
 
 	if !reflect.DeepEqual(expected, err) {
@@ -42,7 +42,7 @@ func TestImageByNameBadRegionID(t *testing.T) {
 	mockClient := mock.NewMockV4Caller(mockCtrl)
 	testHosting := Newv4Hosting(mockClient)
 
-	_, err := testHosting.ImageByName("Debian",Region{ID: "badid"})
+	_, err := testHosting.ImageByName("Debian", Region{ID: "badid"})
 	expected := errors.New("Error parsing RegionID 'badid' from Region {badid  }")
 
 	if !reflect.DeepEqual(expected, err) {
@@ -60,7 +60,7 @@ func TestImageByNameNotFound(t *testing.T) {
 		gomock.Any(),
 		gomock.Any()).SetArg(2, []diskImagev4{}).Return(nil)
 
-	_, err := testHosting.ImageByName("Debian",regions[1])
+	_, err := testHosting.ImageByName("Debian", regions[1])
 	expected := errors.New("Image not found")
 
 	if !reflect.DeepEqual(expected, err) {
@@ -78,7 +78,7 @@ func TestImageByNameSucceeded(t *testing.T) {
 		[]interface{}{map[string]interface{}{"label": images4[0].Name, "datacenter_id": images4[0].RegionID}},
 		gomock.Any()).SetArg(2, []diskImagev4{images4[0]}).Return(nil)
 
-	image, _ := testHosting.ImageByName(images4[0].Name, Region{ID:strconv.Itoa(images4[0].RegionID)})
+	image, _ := testHosting.ImageByName(images4[0].Name, Region{ID: strconv.Itoa(images4[0].RegionID)})
 	expected := fromDiskImagev4(images4[0])
 
 	if !reflect.DeepEqual(expected, image) {
@@ -125,7 +125,7 @@ func TestListImagesInRegionSucceeded(t *testing.T) {
 	defer mockCtrl.Finish()
 	mockClient := mock.NewMockV4Caller(mockCtrl)
 	testHosting := Newv4Hosting(mockClient)
-	
+
 	regionID := images4[1].RegionID
 	var theImages []diskImagev4
 	var expected []DiskImage
