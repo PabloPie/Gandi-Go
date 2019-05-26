@@ -11,8 +11,11 @@ import (
 )
 
 type (
-	VM       = hosting.VM
-	VMSpec   = hosting.VMSpec
+	// VM is an alias for the Hosting object
+	VM = hosting.VM
+	// VMSpec is an alias for the Hosting object
+	VMSpec = hosting.VMSpec
+	// VMFilter is an alias for the Hosting object
 	VMFilter = hosting.VMFilter
 )
 
@@ -50,8 +53,10 @@ type vmFilterv4 struct {
 }
 
 // CreateVMWithExistingDiskAndIP creates a VM from a VMSpec if a valid IPAddress and Disk are given,
-// that is, their IDs already exist. All 3 objects must reside in the same Region.
-// `VMSpec.RegionID` is the only mandatory parameter for the VM.
+// that is, their IDs already exist.
+//
+// All 3 objects must reside in the same Region
+// `VMSpec.RegionID` is the only mandatory parameter for the VM
 func (h Hostingv4) CreateVMWithExistingDiskAndIP(vm VMSpec, ip IPAddress, disk Disk) (VM, IPAddress, Disk, error) {
 	vmspecmap, ipid, diskid, _, err := h.checkParametersAndGetVMSpecMap("CreateVMWithExistingDiskAndIP", vm, &ip, &disk, nil)
 	if err != nil {
@@ -80,10 +85,11 @@ func (h Hostingv4) CreateVMWithExistingDiskAndIP(vm VMSpec, ip IPAddress, disk D
 	return vmRes, vmRes.Ips[0], vmRes.Disks[0], nil
 }
 
-// CreateVMWithExistingDisk creates a VM from a VMSpec if a valid Disk is given,
-// The disk must reside in the same Region as the VM and an IP address
-// will be created in this region.
-// `VMSpec.RegionID` is the only mandatory parameter for the VM.
+// CreateVMWithExistingDisk creates a VM from a VMSpec if a valid Disk is given
+//
+// The disk must reside in the same Region as the VM
+// An IP address will also be created in this region and attached to the VM
+// `VMSpec.RegionID` is mandatory
 func (h Hostingv4) CreateVMWithExistingDisk(vm VMSpec, version hosting.IPVersion, disk Disk) (VM, IPAddress, Disk, error) {
 	vmspecmap, _, diskid, _, err := h.checkParametersAndGetVMSpecMap("CreateVMWithExistingDisk", vm, nil, &disk, nil)
 	if err != nil {
@@ -107,9 +113,10 @@ func (h Hostingv4) CreateVMWithExistingDisk(vm VMSpec, version hosting.IPVersion
 	return vmRes, vmRes.Ips[0], vmRes.Disks[0], nil
 }
 
-// CreateVMWithExistingIP creates a VM from a VMSpec if valid IPAddress and DiskImage are given
-// All three objects must be in the same Region, the new disk will be created in the same region
-// `VMSpec.RegionID` is the only mandatory parameter for VM creation
+// CreateVMWithExistingIP creates a VM from a VMSpec if a valid IPAddress and DiskImage are given
+//
+// All three objects must be in the same Region, the new disk will be created in this region
+// `VMSpec.RegionID` is mandatory
 func (h Hostingv4) CreateVMWithExistingIP(vm VMSpec, image DiskImage, ip IPAddress, diskSize uint) (VM, IPAddress, Disk, error) {
 	vmspecmap, ipid, _, imageid, err := h.checkParametersAndGetVMSpecMap("CreateVMWithExistingIP", vm, &ip, nil, &image)
 	if err != nil {
@@ -152,8 +159,9 @@ func (h Hostingv4) CreateVMWithExistingIP(vm VMSpec, image DiskImage, ip IPAddre
 	return vmRes, vmRes.Ips[0], vmRes.Disks[0], nil
 }
 
-// CreateVM creates a VM together with its system disk and an ip address
-// `VMSpec.RegionID` is the only mandatory parameter for VM creation
+// CreateVM creates a VM from scratch, creating also a system disk and an ip address
+//
+// `VMSpec.RegionID` is mandatory
 func (h Hostingv4) CreateVM(vm VMSpec, image DiskImage, version hosting.IPVersion, diskSize uint) (VM, IPAddress, Disk, error) {
 	vmspecmap, _, _, imageid, err := h.checkParametersAndGetVMSpecMap("CreateVMWithExistingIP", vm, nil, nil, &image)
 	if err != nil {
@@ -192,12 +200,14 @@ func (h Hostingv4) CreateVM(vm VMSpec, image DiskImage, version hosting.IPVersio
 }
 
 // AttachDisk attaches a Disk to a VM, both objects must already exist
+// and be in the same Region
 func (h Hostingv4) AttachDisk(vm VM, disk Disk) (VM, Disk, error) {
 	var fn = "disk_attach"
 	return h.diskAttachDetach(vm, disk, fn, -1)
 }
 
-// AttachDiskAtPosition attaches or swaps a Disk to a VM at the given position, both objects must already exist
+// AttachDiskAtPosition attaches or swaps a Disk to a VM at the given position,
+// both objects must already exist and be in the same Region
 func (h Hostingv4) AttachDiskAtPosition(vm VM, disk Disk, position int) (VM, Disk, error) {
 	var fn = "disk_attach"
 	return h.diskAttachDetach(vm, disk, fn, position)
@@ -251,6 +261,7 @@ func (h Hostingv4) diskAttachDetach(vm VM, disk Disk, op string, position int) (
 }
 
 // AttachIP attaches an IP to a VM, both objects must already exist
+// and be in the same Region
 func (h Hostingv4) AttachIP(vm VM, ip IPAddress) (VM, IPAddress, error) {
 	var fn = "iface_attach"
 	return h.ipAttachDetach(vm, ip, fn)
@@ -322,6 +333,7 @@ func (h Hostingv4) RebootVM(vm VM) error {
 }
 
 // DeleteVM deletes a vm
+//
 // Add cascade option?
 // Automatically stop vm before deleting?
 func (h Hostingv4) DeleteVM(vm VM) error {
@@ -329,7 +341,7 @@ func (h Hostingv4) DeleteVM(vm VM) error {
 	return h.opVM(vm, fn)
 }
 
-// Common function for VM operation
+// Common function for VM operations
 func (h Hostingv4) opVM(vm VM, op string) error {
 	if vm.ID == "" {
 		return &HostingError{op, "VM", "ID", ErrNotProvided}
@@ -360,7 +372,6 @@ func (h Hostingv4) DescribeVM(vmfilter VMFilter) ([]VM, error) {
 	if len(filter) > 0 {
 		params = append(params, filter)
 	}
-	// disk.list and disk.info return the same information
 	err = h.Send("hosting.vm.list", params, &response)
 	if err != nil {
 		return nil, err
@@ -381,6 +392,8 @@ func (h Hostingv4) DescribeVM(vmfilter VMFilter) ([]VM, error) {
 }
 
 // VMFromName is a helper function to get a VM given its name
+//
+// The function returns an error if the VM doesn't exist
 func (h Hostingv4) VMFromName(name string) (VM, error) {
 	if name == "" {
 		return VM{}, &HostingError{"VMFromName", "-", "name", ErrNotProvided}
@@ -422,6 +435,7 @@ func (h Hostingv4) RenameVM(vm VM, newname string) (VM, error) {
 	return h.updateVM(vm, vmupdate)
 }
 
+// Common function for update operations
 func (h Hostingv4) updateVM(vm VM, vmupdate map[string]interface{}) (VM, error) {
 	var fn = "UpdateVM"
 	if vm.ID == "" {
@@ -446,6 +460,8 @@ func (h Hostingv4) updateVM(vm VM, vmupdate map[string]interface{}) (VM, error) 
 	return h.vmFromID(response.VMID)
 }
 
+// Helper functions
+
 // vmFromID returns a global VM object from a v4 id
 func (h Hostingv4) vmFromID(vmid int) (VM, error) {
 	response := vmv4{}
@@ -460,6 +476,7 @@ func (h Hostingv4) vmFromID(vmid int) (VM, error) {
 
 // Internal functions for creation
 
+// Checks parameters of a VM creation
 func (h Hostingv4) checkParametersAndGetVMSpecMap(fn string,
 	vm VMSpec, ip *IPAddress, disk *Disk, image *DiskImage) (map[string]interface{}, int, int, int, error) {
 	var ipid int
@@ -543,6 +560,7 @@ func (h Hostingv4) createVMFromVMSpecMap(vmspecmap map[string]interface{}) (int,
 
 // Internal functions for type conversion
 
+// Hosting VMFilter -> VMFilter v4
 func toVMFilterv4(vmfilter VMFilter) (vmFilterv4, error) {
 	region := toInt(vmfilter.RegionID)
 	if region == -1 {
@@ -563,6 +581,7 @@ func toVMFilterv4(vmfilter VMFilter) (vmFilterv4, error) {
 	}, nil
 }
 
+// Hosting VMSpec -> VMSpec v4
 func (h Hostingv4) toVMSpecv4(vm VMSpec) (vmSpecv4, error) {
 	regionid, err := strconv.Atoi(vm.RegionID)
 	if err != nil {
@@ -589,7 +608,7 @@ func (h Hostingv4) toVMSpecv4(vm VMSpec) (vmSpecv4, error) {
 	}, nil
 }
 
-// API does not return keys added to vm, how to get them?
+// vm v4 -> Hosting VM
 func fromVMv4(vm vmv4) VM {
 	id := strconv.Itoa(vm.ID)
 	regionid := strconv.Itoa(vm.RegionID)

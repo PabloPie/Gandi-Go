@@ -43,6 +43,9 @@ func (h Hostingv4) RegionbyCode(code string) (Region, error) {
 	return fromRegionv4(response[0]), nil
 }
 
+// Conversion functions
+
+// regionv4 -> Hosting Region
 func fromRegionv4(region regionv4) Region {
 	id := strconv.Itoa(region.ID)
 	return Region{

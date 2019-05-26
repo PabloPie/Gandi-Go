@@ -7,8 +7,9 @@ type ImageManager interface {
 	ListImagesInRegion(region Region) ([]DiskImage, error)
 }
 
-// DiskImage represents an image defined by Gandi
-// with an OS, used to create new Disks and VMs
+// DiskImage is an image offered by Gandi
+// with an OS, used to create system Disks
+//
 // TODO: Add kernel version and other info
 type DiskImage struct {
 	ID       string

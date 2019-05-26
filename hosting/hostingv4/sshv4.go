@@ -6,6 +6,7 @@ import (
 	"github.com/PabloPie/go-gandi/hosting"
 )
 
+// SSHKey is an alias for the Hosting object
 type SSHKey = hosting.SSHKey
 
 // sshkeyv4 represents an sshkey in v4, the only difference is the
@@ -33,7 +34,7 @@ func (h Hostingv4) CreateKey(name string, value string) (SSHKey, error) {
 	return h.keyFromID(response.ID), nil
 }
 
-// DeleteKey deletes de SSH Key provided as argument
+// DeleteKey deletes an SSH Key
 func (h Hostingv4) DeleteKey(key SSHKey) error {
 	id, err := strconv.Atoi(key.ID)
 	if err != nil {
@@ -48,7 +49,8 @@ func (h Hostingv4) DeleteKey(key SSHKey) error {
 	return err
 }
 
-// KeyFromName returns the key associated with the name passed as argument
+// KeyFromName returns the key with name `name`, or an empty
+// object if the key doesn't exist
 func (h Hostingv4) KeyFromName(name string) SSHKey {
 	params := []interface{}{
 		map[string]string{
@@ -69,11 +71,14 @@ func (h Hostingv4) ListKeys() []SSHKey {
 
 	var keys = []SSHKey{}
 	for _, key := range response {
+		// Getting also the value of a key is optional...
 		fullkey := h.keyFromID(key.ID)
 		keys = append(keys, fullkey)
 	}
 	return keys
 }
+
+// Helper functions
 
 // keyFromID is an internal function to get a general SSHKey from a v4 ID
 func (h Hostingv4) keyFromID(id int) SSHKey {
@@ -82,6 +87,8 @@ func (h Hostingv4) keyFromID(id int) SSHKey {
 	_ = h.Send("hosting.ssh.info", params, &response)
 	return toSSHKey(response)
 }
+
+// Conversion functions
 
 // toSSHKey transforms a v4 SSHKey to a generic one
 func toSSHKey(key sshkeyv4) SSHKey {

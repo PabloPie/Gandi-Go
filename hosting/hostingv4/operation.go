@@ -21,6 +21,7 @@ type Operation struct {
 	Type    string `xmlrpc:"type"`
 }
 
+// waitForOp waits for an operation to end, or fail...
 func (h Hostingv4) waitForOp(op Operation) error {
 	res := operationInfo{}
 	params := []interface{}{op.ID}

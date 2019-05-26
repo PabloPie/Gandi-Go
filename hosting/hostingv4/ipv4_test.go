@@ -14,12 +14,12 @@ import (
 )
 
 var (
-	nb_ipv6                = 4
-	nb_ipv4                = 4
-	test_regionid          = 789
-	test_version           = hosting.IPv4
-	nb_test_region_version = 2
-	ipsv4                  = []iPAddressv4{
+	nbipv6              = 4
+	nbipv4              = 4
+	testRegionID        = 789
+	testVersion         = hosting.IPv4
+	nbTestRegionVersion = 2
+	ipsv4               = []iPAddressv4{
 		iPAddressv4{ID: 100, IP: "192.168.0.1", RegionID: 123, Version: 4, VM: 0, State: "created"},
 		iPAddressv4{ID: 102, IP: "2001:4b98::DEAD", RegionID: 123, Version: 6, VM: 0, State: "created"},
 		iPAddressv4{ID: 154, IP: "2001:4b98::BABE", RegionID: 456, Version: 6, VM: 0, State: "being_created"},
@@ -47,18 +47,18 @@ func TestCreateIPv4(t *testing.T) {
 	testCreateIP(t, hosting.IPv4, "92.243.17.196", regions[2])
 }
 
-func testCreateIP(t *testing.T, version hosting.IPVersion, theIp string, region Region) {
+func testCreateIP(t *testing.T, version hosting.IPVersion, theIP string, region Region) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 	mockClient := mock.NewMockV4Caller(mockCtrl)
 	testHosting := Newv4Hosting(mockClient)
 
 	myOp := Operation{ID: 1, IPID: 666}
-	regionIdInt, _ := strconv.Atoi(region.ID)
+	regionIDInt, _ := strconv.Atoi(region.ID)
 
 	creation := mockClient.EXPECT().Send("hosting.iface.create",
 		[]interface{}{map[string]interface{}{
-			"datacenter_id": regionIdInt,
+			"datacenter_id": regionIDInt,
 			"ip_version":    int(version),
 			"bandwidth":     hosting.DefaultBandwidth,
 		}},
@@ -70,8 +70,8 @@ func testCreateIP(t *testing.T, version hosting.IPVersion, theIp string, region 
 
 	ipaddressv4 := iPAddressv4{
 		ID:       1337,
-		IP:       theIp,
-		RegionID: regionIdInt,
+		IP:       theIP,
+		RegionID: regionIDInt,
 		Version:  int(version),
 		VM:       0,
 		State:    "created",
@@ -79,7 +79,7 @@ func testCreateIP(t *testing.T, version hosting.IPVersion, theIp string, region 
 
 	ipexpected := IPAddress{
 		ID:       "1337",
-		IP:       theIp,
+		IP:       theIP,
 		RegionID: region.ID,
 		Version:  version,
 		VM:       "0",
@@ -120,11 +120,11 @@ func TestCreateIPCreationFailed(t *testing.T) {
 	myOp := Operation{ID: 212, IPID: 99}
 	region := regions[0]
 	version := hosting.IPv4
-	regionIdInt, _ := strconv.Atoi(region.ID)
+	regionIDInt, _ := strconv.Atoi(region.ID)
 
 	creation := mockClient.EXPECT().Send("hosting.iface.create",
 		[]interface{}{map[string]interface{}{
-			"datacenter_id": regionIdInt,
+			"datacenter_id": regionIDInt,
 			"ip_version":    int(version),
 			"bandwidth":     hosting.DefaultBandwidth,
 		}},
@@ -155,12 +155,12 @@ func TestDeleteIP(t *testing.T) {
 	testHosting := Newv4Hosting(mockClient)
 
 	ip := toIPAddress(ipsv4[1])
-	ipIdInt, _ := strconv.Atoi(ip.ID)
+	ipIDInt, _ := strconv.Atoi(ip.ID)
 	opIPInfo := Operation{ID: 123654, IfaceID: 666}
 	opWait := Operation{ID: 123777}
 
 	infos := mockClient.EXPECT().Send("hosting.ip.info",
-		[]interface{}{ipIdInt},
+		[]interface{}{ipIDInt},
 		gomock.Any()).SetArg(2, opIPInfo).Return(nil)
 
 	delete := mockClient.EXPECT().Send("hosting.iface.delete",
@@ -347,15 +347,15 @@ func TestDescribeIPByRegionID(t *testing.T) {
 	mockClient := mock.NewMockV4Caller(mockCtrl)
 	testHosting := Newv4Hosting(mockClient)
 
-	regionId := test_regionid
-	regionIdString := strconv.Itoa(test_regionid)
-	filter := IPFilter{RegionID: regionIdString}
+	regionID := testRegionID
+	regionIDString := strconv.Itoa(testRegionID)
+	filter := IPFilter{RegionID: regionIDString}
 	ipmap, _ := ipFilterToMap(filter)
 
 	var ipsv4region []iPAddressv4
 	var expected []IPAddress
 	for _, iip := range ipsv4 {
-		if iip.RegionID == regionId {
+		if iip.RegionID == regionID {
 			ipsv4region = append(ipsv4region, iip)
 			expected = append(expected, toIPAddress(iip))
 		}
@@ -378,18 +378,18 @@ func TestDescribeIPByRegionIDAndVersion(t *testing.T) {
 	mockClient := mock.NewMockV4Caller(mockCtrl)
 	testHosting := Newv4Hosting(mockClient)
 
-	regionId := test_regionid
-	regionIdString := strconv.Itoa(test_regionid)
-	version := test_version
-	versionInt := int(test_version)
+	regionID := testRegionID
+	regionIDString := strconv.Itoa(testRegionID)
+	version := testVersion
+	versionInt := int(testVersion)
 
-	filter := IPFilter{RegionID: regionIdString, Version: version}
+	filter := IPFilter{RegionID: regionIDString, Version: version}
 	ipmap, _ := ipFilterToMap(filter)
 
 	var ipsv4region []iPAddressv4
 	var expected []IPAddress
 	for _, iip := range ipsv4 {
-		if iip.RegionID == regionId && iip.Version == versionInt {
+		if iip.RegionID == regionID && iip.Version == versionInt {
 			ipsv4region = append(ipsv4region, iip)
 			expected = append(expected, toIPAddress(iip))
 		}
@@ -401,8 +401,8 @@ func TestDescribeIPByRegionIDAndVersion(t *testing.T) {
 
 	ipsresult, _ := testHosting.DescribeIP(filter)
 
-	if len(ipsresult) != nb_test_region_version {
-		t.Errorf("Error, expected %+v IPs, got %+v !", nb_test_region_version, len(ipsresult))
+	if len(ipsresult) != nbTestRegionVersion {
+		t.Errorf("Error, expected %+v IPs, got %+v !", nbTestRegionVersion, len(ipsresult))
 	}
 
 	if !reflect.DeepEqual(expected, ipsresult) {

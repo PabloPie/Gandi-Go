@@ -8,10 +8,14 @@ import (
 )
 
 type (
+	// IPAddress is an alias for the Hosting object
 	IPAddress = hosting.IPAddress
-	IPFilter  = hosting.IPFilter
+	// IPFilter is an alias for the Hosting object
+	IPFilter = hosting.IPFilter
 )
 
+// Private representation of an ip object in v4 of
+// Gandi's API, where IDs are integers instead of strings
 type iPAddressv4 struct {
 	ID       int    `xmlrpc:"id"`
 	IP       string `xmlrpc:"ip"`
@@ -21,6 +25,9 @@ type iPAddressv4 struct {
 	State    string `xmlrpc:"state"`
 }
 
+// Internally, ips are associated to interfaces, even though
+// we abstract those away, we need an internal object for
+// API responses
 type iface struct {
 	IPs      []iPAddressv4 `xmlrpc:"ips"`
 	RegionID int           `xmlrpc:"datacenter_id"`
@@ -28,6 +35,10 @@ type iface struct {
 	VMID     int           `xmlrpc:"vm_id"`
 }
 
+// CreateIP creates an ip object that represents a public IP, either v4 or v6
+//
+// It requires a valid Region object, whose only mandatory field is its ID
+// An ipv6 is always created for the interface, even when only an ipv4 is requested
 func (h Hostingv4) CreateIP(region Region, version hosting.IPVersion) (IPAddress, error) {
 	if version != hosting.IPv4 && version != hosting.IPv6 {
 		return IPAddress{}, errors.New("Bad IP version")
@@ -63,6 +74,7 @@ func (h Hostingv4) CreateIP(region Region, version hosting.IPVersion) (IPAddress
 	return toIPAddress(iip), nil
 }
 
+// DescribeIP returns a list of ips filtered with the options provided in `diskFilter`
 func (h Hostingv4) DescribeIP(ipfilter IPFilter) ([]IPAddress, error) {
 	ipmap, err := ipFilterToMap(ipfilter)
 	if err != nil {
@@ -82,6 +94,10 @@ func (h Hostingv4) DescribeIP(ipfilter IPFilter) ([]IPAddress, error) {
 	return ips, nil
 }
 
+// DeleteIP deletes an IP Address
+//
+// It will also delete the associated interface, so if it is
+// an ipv4, the corresponding ipv6 will also be deleted
 func (h Hostingv4) DeleteIP(ip IPAddress) error {
 	ipid, err := strconv.Atoi(ip.ID)
 	if err != nil {
@@ -101,6 +117,7 @@ func (h Hostingv4) DeleteIP(ip IPAddress) error {
 	return h.waitForOp(response)
 }
 
+// Get the interface associated to a specific IP
 func (h Hostingv4) ifaceIDFromIPID(ipid int) (int, error) {
 	// An operation already contains a field for iface_id
 	// we avoid defining a new struct
@@ -112,6 +129,7 @@ func (h Hostingv4) ifaceIDFromIPID(ipid int) (int, error) {
 	return response.IfaceID, nil
 }
 
+// Helper function to get an IP object from its v4 ID
 func (h Hostingv4) ipFromID(ipid int) (IPAddress, error) {
 	response := iPAddressv4{}
 	err := h.Send("hosting.ip.info", []interface{}{ipid}, &response)
@@ -154,6 +172,7 @@ func ipFilterToMap(ipfilter IPFilter) (map[string]interface{}, error) {
 	return ipmap, nil
 }
 
+// v4 API IP -> Hosting IPAddress
 func toIPAddress(iip iPAddressv4) (ip IPAddress) {
 	ip.ID = strconv.Itoa(iip.ID)
 	ip.IP = iip.IP

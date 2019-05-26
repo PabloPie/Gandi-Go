@@ -25,13 +25,17 @@ type Disk struct {
 }
 
 // DiskSpec contains the parameters to create a new Disk
+//
+// The only mandatory field is `RegionID`
 type DiskSpec struct {
 	RegionID string
 	Name     string
 	Size     int
 }
 
-//DiskFilter is used to filter the results DescribeDisks returns,
+// DiskFilter is used to search a list of disks
+// filtered with the fields defined
+//
 // TODO: allow a list of elements
 type DiskFilter struct {
 	ID       string

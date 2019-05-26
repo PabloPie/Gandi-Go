@@ -83,9 +83,10 @@ func TestCreateVM(t *testing.T) {
 	if err != nil {
 		log.Println(err)
 	}
-
-	expectedIPS := []IPAddress{{"1", "192.168.1.1", regionstr, hosting.IPVersion(4), vmidstr, "used"}}
-	expectedDisks := []Disk{{diskidstr, "sysdisk_1", disksize, regionstr, "created", "data", []string{vmidstr}, true}}
+	expectedIPS := []IPAddress{{ID: "1", IP: "192.168.1.1", RegionID: regionstr,
+		Version: hosting.IPVersion(4), VM: vmidstr, State: "used"}}
+	expectedDisks := []Disk{{ID: diskidstr, Name: "sysdisk_1", Size: disksize, RegionID: regionstr,
+		State: "created", Type: "data", VM: []string{vmidstr}, BootDisk: true}}
 	expected := VM{
 		ID:          vmidstr,
 		Hostname:    vmname,
@@ -167,8 +168,10 @@ func TestCreateVMWithExistingIP(t *testing.T) {
 		log.Println(err)
 	}
 
-	expectedIPS := []IPAddress{{"1", "192.168.1.1", regionstr, hosting.IPVersion(4), vmidstr, "used"}}
-	expectedDisks := []Disk{{diskidstr, "sysdisk_1", disksize, regionstr, "created", "data", []string{vmidstr}, true}}
+	expectedIPS := []IPAddress{{ID: "1", IP: "192.168.1.1", RegionID: regionstr,
+		Version: hosting.IPVersion(4), VM: vmidstr, State: "used"}}
+	expectedDisks := []Disk{{ID: diskidstr, Name: "sysdisk_1", Size: disksize, RegionID: regionstr,
+		State: "created", Type: "data", VM: []string{vmidstr}, BootDisk: true}}
 	expected := VM{
 		ID:          vmidstr,
 		Hostname:    vmname,
@@ -245,8 +248,10 @@ func TestCreateVMWithExistingDiskAndIP(t *testing.T) {
 		log.Println(err)
 	}
 
-	expectedIPS := []IPAddress{{"1", "192.168.1.1", regionstr, hosting.IPVersion(4), vmidstr, "used"}}
-	expectedDisks := []Disk{{"1", "sysdisk_1", disksize, regionstr, "created", "data", []string{vmidstr}, true}}
+	expectedIPS := []IPAddress{{ID: "1", IP: "192.168.1.1", RegionID: regionstr,
+		Version: hosting.IPVersion(4), VM: vmidstr, State: "used"}}
+	expectedDisks := []Disk{{ID: "1", Name: "sysdisk_1", Size: disksize, RegionID: regionstr,
+		State: "created", Type: "data", VM: []string{vmidstr}, BootDisk: true}}
 	expected := VM{
 		ID:          vmidstr,
 		Hostname:    vmname,
@@ -367,7 +372,7 @@ func TestDiskAttachAtPosition(t *testing.T) {
 
 	vmres, _, _ := testHosting.AttachDiskAtPosition(vm, disk, position)
 
-	for i, _ := range vmres.Disks {
+	for i := range vmres.Disks {
 		if expectedVm.Disks[i].ID != vmres.Disks[i].ID {
 			t.Errorf("Error, disk %d does not match, expected %v, got %v instead", i, expectedVm.Disks[i], vmres.Disks[i])
 		}

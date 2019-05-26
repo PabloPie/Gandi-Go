@@ -9,9 +9,11 @@ import (
 )
 
 type (
+	// Region is an alias for the Hosting object
 	Region = hosting.Region
 )
 
+// internal representation of a Disk Image for API v4
 type diskImagev4 struct {
 	ID       int    `xmlrpc:"id"`
 	DiskID   int    `xmlrpc:"disk_id"`
@@ -20,7 +22,7 @@ type diskImagev4 struct {
 	Size     int    `xmlrpc:"size"`
 }
 
-// ImageByName return the DiskImage with label `name`
+// ImageByName returns the DiskImage with label `name` found in `region`
 func (h Hostingv4) ImageByName(name string, region Region) (DiskImage, error) {
 	if region.ID == "" {
 		return DiskImage{}, errors.New("Region provided does not have an ID")
@@ -78,6 +80,7 @@ func (h Hostingv4) ListImagesInRegion(region Region) ([]DiskImage, error) {
 	return diskimages, nil
 }
 
+// diskImagev4 -> Hosting DiskImage
 func fromDiskImagev4(image diskImagev4) DiskImage {
 	id := strconv.Itoa(image.ID)
 	diskid := strconv.Itoa(image.DiskID)

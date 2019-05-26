@@ -2,8 +2,7 @@ package hosting
 
 import "time"
 
-// VMManager is an interface embedded in the Hosting interface, not
-// implemented by VM!
+// VMManager represents a service capable of manipulation virtual machine objects in Gandi's platform
 type VMManager interface {
 	// VM creation operations
 	CreateVM(vm VMSpec, image DiskImage, version IPVersion, diskSize uint) (VM, IPAddress, Disk, error)
@@ -11,6 +10,7 @@ type VMManager interface {
 	CreateVMWithExistingDisk(vm VMSpec, version IPVersion, disk Disk) (VM, IPAddress, Disk, error)
 	CreateVMWithExistingDiskAndIP(vm VMSpec, ip IPAddress, disk Disk) (VM, IPAddress, Disk, error)
 
+	// Disk and IP operations
 	AttachDisk(vm VM, disk Disk) (VM, Disk, error)
 	AttachDiskAtPosition(vm VM, disk Disk, position int) (VM, Disk, error)
 	DetachDisk(vm VM, disk Disk) (VM, Disk, error)
@@ -23,6 +23,7 @@ type VMManager interface {
 	RebootVM(vm VM) error
 	DeleteVM(vm VM) error
 
+	// List operations
 	VMFromName(name string) (VM, error)
 	DescribeVM(vmfilter VMFilter) ([]VM, error)
 	ListVMs() ([]VM, error)
@@ -49,7 +50,8 @@ type VM struct {
 	State       string
 }
 
-// VMSpec gives the options available to create a VM
+// VMSpec contains the parameters
+// specified by the user to create a VM
 type VMSpec struct {
 	RegionID  string
 	Hostname  string
@@ -61,7 +63,8 @@ type VMSpec struct {
 	Password  string
 }
 
-// VMFilter contains filtering options for VMs
+// VMFilter is used to list virtual machines,
+// filtered with the options provided
 type VMFilter struct {
 	RegionID string
 	Farm     string
