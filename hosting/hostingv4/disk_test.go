@@ -325,65 +325,65 @@ func TestRenameDisk(t *testing.T) {
 }
 
 func TestDeleteDiskBadID(t *testing.T) {
-	cl, err := client.NewClientv4("", "1234")
+	cl, _ := client.NewClientv4("", "1234")
 	testHosting := Newv4Hosting(cl)
 
 	disk := Disk{
 		ID: "ThisisnotAnID",
 	}
-	err = testHosting.DeleteDisk(disk)
+	err := testHosting.DeleteDisk(disk)
 	if err == nil {
 		t.Errorf("Error, expected error when parsing ID")
 	}
 }
 
 func TestCreateDiskBadRegionID(t *testing.T) {
-	cl, err := client.NewClientv4("", "1234")
+	cl, _ := client.NewClientv4("", "1234")
 	testHosting := Newv4Hosting(cl)
 
 	diskspec := DiskSpec{
 		RegionID: "ThisisnotAnID",
 	}
-	_, err = testHosting.CreateDisk(diskspec)
+	_, err := testHosting.CreateDisk(diskspec)
 	if err == nil {
 		t.Errorf("Error, expected error when parsing ID")
 	}
 }
 
 func TestFilterDisksBadID(t *testing.T) {
-	cl, err := client.NewClientv4("", "1234")
+	cl, _ := client.NewClientv4("", "1234")
 	testHosting := Newv4Hosting(cl)
 
 	filter := DiskFilter{
 		ID: "ThisisnotAnID",
 	}
-	_, err = testHosting.DescribeDisks(filter)
+	_, err := testHosting.DescribeDisks(filter)
 	if err == nil {
 		t.Errorf("Error, expected error when parsing ID")
 	}
 }
 
 func TestFilterDisksBadRegionID(t *testing.T) {
-	cl, err := client.NewClientv4("", "1234")
+	cl, _ := client.NewClientv4("", "1234")
 	testHosting := Newv4Hosting(cl)
 
 	filter := DiskFilter{
 		RegionID: "ThisisnotAnID",
 	}
-	_, err = testHosting.DescribeDisks(filter)
+	_, err := testHosting.DescribeDisks(filter)
 	if err == nil {
 		t.Errorf("Error, expected error when parsing ID")
 	}
 }
 
 func TestFilterDisksBadVMID(t *testing.T) {
-	cl, err := client.NewClientv4("", "1234")
+	cl, _ := client.NewClientv4("", "1234")
 	testHosting := Newv4Hosting(cl)
 
 	filter := DiskFilter{
 		VMID: "ThisisnotAnID",
 	}
-	_, err = testHosting.DescribeDisks(filter)
+	_, err := testHosting.DescribeDisks(filter)
 	if err == nil {
 		t.Errorf("Error, expected error when parsing ID")
 	}

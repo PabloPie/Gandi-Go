@@ -118,7 +118,7 @@ func (h Hostingv4) ListDisks() ([]Disk, error) {
 
 // DiskFromName is a helper function to get a Disk given its name
 //
-// If the Disk does not exist or an error ocurred it returns an empty Disk,
+// If the Disk does not exist or an error occurred it returns an empty Disk,
 // use DescribeDisks with an appropriate DiskFilter to get more details
 // on the possible errors
 func (h Hostingv4) DiskFromName(name string) Disk {

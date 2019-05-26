@@ -10,7 +10,7 @@ const (
 	IPv4 IPVersion = 4
 	// IPv6 is just the int value 6
 	IPv6 IPVersion = 6
-	// DefaultBandwidth is the bandwith an interface
+	// DefaultBandwidth is the bandwidth an interface
 	// is created with, so it doesn't default to 1Mbps
 	DefaultBandwidth float32 = 102400.0
 )

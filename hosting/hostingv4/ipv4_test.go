@@ -411,52 +411,52 @@ func TestDescribeIPByRegionIDAndVersion(t *testing.T) {
 }
 
 func TestDeleteIPBadID(t *testing.T) {
-	cl, err := client.NewClientv4("", "1234")
+	cl, _ := client.NewClientv4("", "1234")
 	testHosting := Newv4Hosting(cl)
 
 	ip := IPAddress{
 		ID: "ThisisnotAnID",
 	}
-	err = testHosting.DeleteIP(ip)
+	err := testHosting.DeleteIP(ip)
 	if err == nil {
 		t.Errorf("Error, expected error when parsing ID")
 	}
 }
 
 func TestCreateIPBadRegionID(t *testing.T) {
-	cl, err := client.NewClientv4("", "1234")
+	cl, _ := client.NewClientv4("", "1234")
 	testHosting := Newv4Hosting(cl)
 
 	region := Region{
 		ID: "ThisisnotAnID",
 	}
-	_, err = testHosting.CreateIP(region, hosting.IPVersion(4))
+	_, err := testHosting.CreateIP(region, hosting.IPVersion(4))
 	if err == nil {
 		t.Errorf("Error, expected error when parsing ID")
 	}
 }
 
 func TestFilterBadID(t *testing.T) {
-	cl, err := client.NewClientv4("", "1234")
+	cl, _ := client.NewClientv4("", "1234")
 	testHosting := Newv4Hosting(cl)
 
 	filter := IPFilter{
 		ID: "ThisisnotAnID",
 	}
-	_, err = testHosting.DescribeIP(filter)
+	_, err := testHosting.DescribeIP(filter)
 	if err == nil {
 		t.Errorf("Error, expected error when parsing ID")
 	}
 }
 
 func TestFilterBadRegionID(t *testing.T) {
-	cl, err := client.NewClientv4("", "1234")
+	cl, _ := client.NewClientv4("", "1234")
 	testHosting := Newv4Hosting(cl)
 
 	filter := IPFilter{
 		RegionID: "ThisisnotAnID",
 	}
-	_, err = testHosting.DescribeIP(filter)
+	_, err := testHosting.DescribeIP(filter)
 	if err == nil {
 		t.Errorf("Error, expected error when parsing ID")
 	}
