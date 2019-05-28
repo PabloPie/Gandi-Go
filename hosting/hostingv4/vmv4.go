@@ -360,8 +360,8 @@ func (h Hostingv4) opVM(vm VM, op string) error {
 	return h.waitForOp(response)
 }
 
-// DescribeVM returns a list of VMs filtered with the options provided in `vmfilter`
-func (h Hostingv4) DescribeVM(vmfilter VMFilter) ([]VM, error) {
+// ListVMs returns a list of VMs filtered with the options provided in `vmfilter`
+func (h Hostingv4) ListVMs(vmfilter VMFilter) ([]VM, error) {
 	filterv4, err := toVMFilterv4(vmfilter)
 	if err != nil {
 		return nil, err
@@ -398,7 +398,7 @@ func (h Hostingv4) VMFromName(name string) (VM, error) {
 	if name == "" {
 		return VM{}, &HostingError{"VMFromName", "-", "name", ErrNotProvided}
 	}
-	vms, err := h.DescribeVM(VMFilter{Hostname: name})
+	vms, err := h.ListVMs(VMFilter{Hostname: name})
 	if err != nil {
 		return VM{}, err
 	}
@@ -409,9 +409,9 @@ func (h Hostingv4) VMFromName(name string) (VM, error) {
 	return vms[0], nil
 }
 
-// ListVMs lists every VM
-func (h Hostingv4) ListVMs() ([]VM, error) {
-	return h.DescribeVM(VMFilter{})
+// ListAllVMs lists every VM
+func (h Hostingv4) ListAllVMs() ([]VM, error) {
+	return h.ListVMs(VMFilter{})
 }
 
 // UpdateVMMemory updates the memory of a VM, new value can be higher

@@ -74,8 +74,8 @@ func (h Hostingv4) CreateIP(region Region, version hosting.IPVersion) (IPAddress
 	return toIPAddress(iip), nil
 }
 
-// DescribeIP returns a list of ips filtered with the options provided in `diskFilter`
-func (h Hostingv4) DescribeIP(ipfilter IPFilter) ([]IPAddress, error) {
+// ListIPs returns a list of ips filtered with the options provided in `diskFilter`
+func (h Hostingv4) ListIPs(ipfilter IPFilter) ([]IPAddress, error) {
 	ipmap, err := ipFilterToMap(ipfilter)
 	if err != nil {
 		return nil, err

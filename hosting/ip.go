@@ -18,7 +18,7 @@ const (
 // IPManager represents a service capable of manipulating Gandi IPs
 type IPManager interface {
 	CreateIP(region Region, version IPVersion) (IPAddress, error)
-	DescribeIP(ipfilter IPFilter) ([]IPAddress, error)
+	ListIPs(ipfilter IPFilter) ([]IPAddress, error)
 	DeleteIP(ip IPAddress) error
 }
 

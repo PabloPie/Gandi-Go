@@ -25,8 +25,8 @@ type VMManager interface {
 
 	// List operations
 	VMFromName(name string) (VM, error)
-	DescribeVM(vmfilter VMFilter) ([]VM, error)
-	ListVMs() ([]VM, error)
+	ListVMs(vmfilter VMFilter) ([]VM, error)
+	ListAllVMs() ([]VM, error)
 
 	// VM update operations
 	UpdateVMMemory(vm VM, memory int) (VM, error)

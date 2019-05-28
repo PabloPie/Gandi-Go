@@ -111,18 +111,18 @@ func (h Hostingv4) CreateDiskFromImage(newDisk DiskSpec, srcDisk DiskImage) (Dis
 	return h.diskFromID(response.DiskID)
 }
 
-// ListDisks lists every disk
-func (h Hostingv4) ListDisks() ([]Disk, error) {
-	return h.DescribeDisks(DiskFilter{})
+// ListAllDisks lists every disk
+func (h Hostingv4) ListAllDisks() ([]Disk, error) {
+	return h.ListDisks(DiskFilter{})
 }
 
 // DiskFromName is a helper function to get a Disk given its name
 //
 // If the Disk does not exist or an error occurred it returns an empty Disk,
-// use DescribeDisks with an appropriate DiskFilter to get more details
+// use ListDisks with an appropriate DiskFilter to get more details
 // on the possible errors
 func (h Hostingv4) DiskFromName(name string) Disk {
-	disks, err := h.DescribeDisks(DiskFilter{Name: name})
+	disks, err := h.ListDisks(DiskFilter{Name: name})
 	if err != nil || len(disks) < 1 {
 		return Disk{}
 	}
@@ -130,8 +130,8 @@ func (h Hostingv4) DiskFromName(name string) Disk {
 	return disks[0]
 }
 
-// DescribeDisks returns a list of disks filtered with the options provided in `diskFilter`
-func (h Hostingv4) DescribeDisks(diskfilter DiskFilter) ([]Disk, error) {
+// ListDisks returns a list of disks filtered with the options provided in `diskFilter`
+func (h Hostingv4) ListDisks(diskfilter DiskFilter) ([]Disk, error) {
 	filterv4, err := toDiskFilterv4(diskfilter)
 	if err != nil {
 		return nil, err

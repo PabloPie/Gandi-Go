@@ -139,7 +139,7 @@ func TestCreateDiskFromImageWithoutSize(t *testing.T) {
 	}
 }
 
-func TestListDisk(t *testing.T) {
+func TestListAllDisks(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 	mockClient := mock.NewMockV4Caller(mockCtrl)
@@ -150,7 +150,7 @@ func TestListDisk(t *testing.T) {
 	mockClient.EXPECT().Send("hosting.disk.list",
 		paramsDiskInfo, gomock.Any()).SetArg(2, responseDiskInfo).Return(nil)
 
-	disks, _ := testHosting.ListDisks()
+	disks, _ := testHosting.ListAllDisks()
 
 	if len(disks) < 1 {
 		t.Errorf("Error, expected to get at least 1 Disk")
@@ -169,7 +169,7 @@ func TestListDiskWithEmptyFilterNodisks(t *testing.T) {
 		paramsDiskInfo, gomock.Any()).SetArg(2, responseDiskInfo).Return(nil)
 
 	diskfilter := DiskFilter{}
-	disks, _ := testHosting.DescribeDisks(diskfilter)
+	disks, _ := testHosting.ListDisks(diskfilter)
 
 	if len(disks) > 0 {
 		t.Errorf("Error, expected to get no Disks")
@@ -190,7 +190,7 @@ func TestListDiskWithNameInFilter(t *testing.T) {
 		paramsDiskInfo, gomock.Any()).SetArg(2, responseDiskInfo).Return(nil)
 
 	diskfilter := DiskFilter{Name: diskname}
-	disks, _ := testHosting.DescribeDisks(diskfilter)
+	disks, _ := testHosting.ListDisks(diskfilter)
 
 	if len(disks) != 1 {
 		t.Errorf("Error, expected to get only 1 Disk and got %d instead", len(disks))
@@ -357,7 +357,7 @@ func TestFilterDisksBadID(t *testing.T) {
 	filter := DiskFilter{
 		ID: "ThisisnotAnID",
 	}
-	_, err := testHosting.DescribeDisks(filter)
+	_, err := testHosting.ListDisks(filter)
 	if err == nil {
 		t.Errorf("Error, expected error when parsing ID")
 	}
@@ -370,7 +370,7 @@ func TestFilterDisksBadRegionID(t *testing.T) {
 	filter := DiskFilter{
 		RegionID: "ThisisnotAnID",
 	}
-	_, err := testHosting.DescribeDisks(filter)
+	_, err := testHosting.ListDisks(filter)
 	if err == nil {
 		t.Errorf("Error, expected error when parsing ID")
 	}
@@ -383,7 +383,7 @@ func TestFilterDisksBadVMID(t *testing.T) {
 	filter := DiskFilter{
 		VMID: "ThisisnotAnID",
 	}
-	_, err := testHosting.DescribeDisks(filter)
+	_, err := testHosting.ListDisks(filter)
 	if err == nil {
 		t.Errorf("Error, expected error when parsing ID")
 	}

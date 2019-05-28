@@ -178,9 +178,9 @@ func TestDeleteIP(t *testing.T) {
 	}
 }
 
-/* DescribeIP */
+/* ListIPs */
 
-func TestDescribeAllIP(t *testing.T) {
+func TestListAllIP(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 	mockClient := mock.NewMockV4Caller(mockCtrl)
@@ -193,7 +193,7 @@ func TestDescribeAllIP(t *testing.T) {
 		[]interface{}{ipmap},
 		gomock.Any()).SetArg(2, ipsv4).Return(nil)
 
-	ipsresult, _ := testHosting.DescribeIP(filter)
+	ipsresult, _ := testHosting.ListIPs(filter)
 
 	var expected []IPAddress
 	for _, ip := range ipsv4 {
@@ -205,8 +205,8 @@ func TestDescribeAllIP(t *testing.T) {
 	}
 }
 
-func TestDescribeAllIPv4(t *testing.T) {
-	ipsresult, _ := testDescribeIPByVersion(t, hosting.IPv4)
+func TestListAllIPv4(t *testing.T) {
+	ipsresult, _ := testListIPsByVersion(t, hosting.IPv4)
 
 	var expected []IPAddress
 	for _, ip := range ipsv4 {
@@ -220,8 +220,8 @@ func TestDescribeAllIPv4(t *testing.T) {
 	}
 }
 
-func TestDescribeAllIPv6(t *testing.T) {
-	ipsresult, _ := testDescribeIPByVersion(t, hosting.IPv6)
+func TestListAllIPv6(t *testing.T) {
+	ipsresult, _ := testListIPsByVersion(t, hosting.IPv6)
 
 	var expected []IPAddress
 	for _, ip := range ipsv4 {
@@ -239,12 +239,12 @@ func TestDescribeAllIPv6(t *testing.T) {
 	}
 }
 
-func TestDescribeIPBadVersion(t *testing.T) {
+func TestListIPsBadVersion(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 	mockClient := mock.NewMockV4Caller(mockCtrl)
 	testHosting := Newv4Hosting(mockClient)
-	_, err := testHosting.DescribeIP(IPFilter{Version: 5})
+	_, err := testHosting.ListIPs(IPFilter{Version: 5})
 	expected := internalParseError("IPFilter", "Version")
 
 	if !reflect.DeepEqual(expected, err) {
@@ -252,7 +252,7 @@ func TestDescribeIPBadVersion(t *testing.T) {
 	}
 }
 
-func testDescribeIPByVersion(t *testing.T, version hosting.IPVersion) ([]IPAddress, error) {
+func testListIPsByVersion(t *testing.T, version hosting.IPVersion) ([]IPAddress, error) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 	mockClient := mock.NewMockV4Caller(mockCtrl)
@@ -273,10 +273,10 @@ func testDescribeIPByVersion(t *testing.T, version hosting.IPVersion) ([]IPAddre
 		[]interface{}{ipmap},
 		gomock.Any()).SetArg(2, ipsv4version).Return(nil)
 
-	return testHosting.DescribeIP(filter)
+	return testHosting.ListIPs(filter)
 }
 
-func TestDescribeIPByIP(t *testing.T) {
+func TestListIPsByIP(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 	mockClient := mock.NewMockV4Caller(mockCtrl)
@@ -290,7 +290,7 @@ func TestDescribeIPByIP(t *testing.T) {
 		[]interface{}{ipmap},
 		gomock.Any()).SetArg(2, []iPAddressv4{ip}).Return(nil)
 
-	ipsresult, _ := testHosting.DescribeIP(filter)
+	ipsresult, _ := testHosting.ListIPs(filter)
 
 	var expected []IPAddress
 	for _, iip := range ipsv4 {
@@ -308,7 +308,7 @@ func TestDescribeIPByIP(t *testing.T) {
 	}
 }
 
-func TestDescribeIPByID(t *testing.T) {
+func TestListIPsByID(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 	mockClient := mock.NewMockV4Caller(mockCtrl)
@@ -323,7 +323,7 @@ func TestDescribeIPByID(t *testing.T) {
 		[]interface{}{ipmap},
 		gomock.Any()).SetArg(2, []iPAddressv4{ip}).Return(nil)
 
-	ipsresult, _ := testHosting.DescribeIP(filter)
+	ipsresult, _ := testHosting.ListIPs(filter)
 
 	var expected []IPAddress
 	for _, iip := range ipsv4 {
@@ -341,7 +341,7 @@ func TestDescribeIPByID(t *testing.T) {
 	}
 }
 
-func TestDescribeIPByRegionID(t *testing.T) {
+func TestListIPsByRegionID(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 	mockClient := mock.NewMockV4Caller(mockCtrl)
@@ -365,14 +365,14 @@ func TestDescribeIPByRegionID(t *testing.T) {
 		[]interface{}{ipmap},
 		gomock.Any()).SetArg(2, ipsv4region).Return(nil)
 
-	ipsresult, _ := testHosting.DescribeIP(filter)
+	ipsresult, _ := testHosting.ListIPs(filter)
 
 	if !reflect.DeepEqual(expected, ipsresult) {
 		t.Errorf("Error, expected %+v, got instead %+v", expected, ipsresult)
 	}
 }
 
-func TestDescribeIPByRegionIDAndVersion(t *testing.T) {
+func TestListIPsByRegionIDAndVersion(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 	mockClient := mock.NewMockV4Caller(mockCtrl)
@@ -399,7 +399,7 @@ func TestDescribeIPByRegionIDAndVersion(t *testing.T) {
 		[]interface{}{ipmap},
 		gomock.Any()).SetArg(2, ipsv4region).Return(nil)
 
-	ipsresult, _ := testHosting.DescribeIP(filter)
+	ipsresult, _ := testHosting.ListIPs(filter)
 
 	if len(ipsresult) != nbTestRegionVersion {
 		t.Errorf("Error, expected %+v IPs, got %+v !", nbTestRegionVersion, len(ipsresult))
@@ -443,7 +443,7 @@ func TestFilterBadID(t *testing.T) {
 	filter := IPFilter{
 		ID: "ThisisnotAnID",
 	}
-	_, err := testHosting.DescribeIP(filter)
+	_, err := testHosting.ListIPs(filter)
 	if err == nil {
 		t.Errorf("Error, expected error when parsing ID")
 	}
@@ -456,7 +456,7 @@ func TestFilterBadRegionID(t *testing.T) {
 	filter := IPFilter{
 		RegionID: "ThisisnotAnID",
 	}
-	_, err := testHosting.DescribeIP(filter)
+	_, err := testHosting.ListIPs(filter)
 	if err == nil {
 		t.Errorf("Error, expected error when parsing ID")
 	}
