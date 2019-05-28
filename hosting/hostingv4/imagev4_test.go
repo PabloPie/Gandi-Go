@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/PabloPie/go-gandi/hosting"
 	"github.com/PabloPie/go-gandi/mock"
 	"github.com/golang/mock/gomock"
 )
@@ -28,8 +29,8 @@ func TestImageByNameEmptyRegion(t *testing.T) {
 	mockClient := mock.NewMockV4Caller(mockCtrl)
 	testHosting := Newv4Hosting(mockClient)
 
-	_, err := testHosting.ImageByName("Debian", Region{})
-	expected := errors.New("Region provided does not have an ID")
+	_, err := testHosting.ImageByName("Debian", hosting.Region{})
+	expected := errors.New("hosting.Region provided does not have an ID")
 
 	if !reflect.DeepEqual(expected, err) {
 		t.Errorf("Error, expected '%+v', got instead '%+v'", expected, err)
@@ -42,8 +43,8 @@ func TestImageByNameBadRegionID(t *testing.T) {
 	mockClient := mock.NewMockV4Caller(mockCtrl)
 	testHosting := Newv4Hosting(mockClient)
 
-	_, err := testHosting.ImageByName("Debian", Region{ID: "badid"})
-	expected := errors.New("Error parsing RegionID 'badid' from Region {badid  }")
+	_, err := testHosting.ImageByName("Debian", hosting.Region{ID: "badid"})
+	expected := errors.New("Error parsing RegionID 'badid' from hosting.Region {badid  }")
 
 	if !reflect.DeepEqual(expected, err) {
 		t.Errorf("Error, expected '%+v', got instead '%+v'", expected, err)
@@ -78,7 +79,7 @@ func TestImageByNameSucceeded(t *testing.T) {
 		[]interface{}{map[string]interface{}{"label": images4[0].Name, "datacenter_id": images4[0].RegionID}},
 		gomock.Any()).SetArg(2, []diskImagev4{images4[0]}).Return(nil)
 
-	image, _ := testHosting.ImageByName(images4[0].Name, Region{ID: strconv.Itoa(images4[0].RegionID)})
+	image, _ := testHosting.ImageByName(images4[0].Name, hosting.Region{ID: strconv.Itoa(images4[0].RegionID)})
 	expected := fromDiskImagev4(images4[0])
 
 	if !reflect.DeepEqual(expected, image) {
@@ -94,8 +95,8 @@ func TestListImagesInRegionBadRegionID(t *testing.T) {
 	mockClient := mock.NewMockV4Caller(mockCtrl)
 	testHosting := Newv4Hosting(mockClient)
 
-	_, err := testHosting.ListImagesInRegion(Region{ID: "badid"})
-	expected := errors.New("Error parsing RegionID 'badid' from Region {badid  }")
+	_, err := testHosting.ListImagesInRegion(hosting.Region{ID: "badid"})
+	expected := errors.New("Error parsing RegionID 'badid' from hosting.Region {badid  }")
 
 	if !reflect.DeepEqual(expected, err) {
 		t.Errorf("Error, expected '%+v', got instead '%+v'", expected, err)
@@ -128,7 +129,7 @@ func TestListImagesInRegionSucceeded(t *testing.T) {
 
 	regionID := images4[1].RegionID
 	var theImages []diskImagev4
-	var expected []DiskImage
+	var expected []hosting.DiskImage
 	for _, i := range images4 {
 		if i.RegionID == regionID {
 			theImages = append(theImages, i)

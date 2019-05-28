@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/PabloPie/go-gandi/client"
+	"github.com/PabloPie/go-gandi/hosting"
 	"github.com/PabloPie/go-gandi/mock"
 	"github.com/golang/mock/gomock"
 )
@@ -63,14 +64,14 @@ func TestCreateDiskWithNameSizeAndRegion(t *testing.T) {
 	mockClient.EXPECT().Send("hosting.disk.info",
 		paramsDiskInfo, gomock.Any()).SetArg(2, responseDiskInfo).Return(nil).After(wait)
 
-	diskspec := DiskSpec{
+	diskspec := hosting.DiskSpec{
 		RegionID: regionstr,
 		Name:     diskname,
 		Size:     disksize,
 	}
 	disk, _ := testHosting.CreateDisk(diskspec)
 
-	expected := Disk{
+	expected := hosting.Disk{
 		ID:       diskidstr,
 		Name:     diskname,
 		Size:     disksize,
@@ -112,11 +113,11 @@ func TestCreateDiskFromImageWithoutSize(t *testing.T) {
 	mockClient.EXPECT().Send("hosting.disk.info",
 		paramsDiskInfo, gomock.Any()).SetArg(2, responseDiskInfo).Return(nil).After(wait)
 
-	diskspec := DiskSpec{
+	diskspec := hosting.DiskSpec{
 		RegionID: regionstr,
 		Name:     diskname,
 	}
-	diskimage := DiskImage{
+	diskimage := hosting.DiskImage{
 		DiskID:   imageidstr,
 		Size:     3,
 		Name:     "Debian 9",
@@ -124,7 +125,7 @@ func TestCreateDiskFromImageWithoutSize(t *testing.T) {
 	}
 	disk, _ := testHosting.CreateDiskFromImage(diskspec, diskimage)
 
-	expected := Disk{
+	expected := hosting.Disk{
 		ID:       diskidstr,
 		Name:     diskname,
 		Size:     3,
@@ -153,7 +154,7 @@ func TestListAllDisks(t *testing.T) {
 	disks, _ := testHosting.ListAllDisks()
 
 	if len(disks) < 1 {
-		t.Errorf("Error, expected to get at least 1 Disk")
+		t.Errorf("Error, expected to get at least 1 hosting.Disk")
 	}
 }
 
@@ -168,7 +169,7 @@ func TestListDiskWithEmptyFilterNodisks(t *testing.T) {
 	mockClient.EXPECT().Send("hosting.disk.list",
 		paramsDiskInfo, gomock.Any()).SetArg(2, responseDiskInfo).Return(nil)
 
-	diskfilter := DiskFilter{}
+	diskfilter := hosting.DiskFilter{}
 	disks, _ := testHosting.ListDisks(diskfilter)
 
 	if len(disks) > 0 {
@@ -189,14 +190,14 @@ func TestListDiskWithNameInFilter(t *testing.T) {
 	mockClient.EXPECT().Send("hosting.disk.list",
 		paramsDiskInfo, gomock.Any()).SetArg(2, responseDiskInfo).Return(nil)
 
-	diskfilter := DiskFilter{Name: diskname}
+	diskfilter := hosting.DiskFilter{Name: diskname}
 	disks, _ := testHosting.ListDisks(diskfilter)
 
 	if len(disks) != 1 {
-		t.Errorf("Error, expected to get only 1 Disk and got %d instead", len(disks))
+		t.Errorf("Error, expected to get only 1 hosting.Disk and got %d instead", len(disks))
 	}
 	if disks[0].Name != diskname {
-		t.Errorf("Error, expected to get Disk with name '%s', got '%s' instead",
+		t.Errorf("Error, expected to get hosting.Disk with name '%s', got '%s' instead",
 			diskname, disks[0].Name)
 	}
 }
@@ -217,7 +218,7 @@ func TestDiskFromName(t *testing.T) {
 	disk := testHosting.DiskFromName(diskname)
 
 	if disk.Name != diskname {
-		t.Errorf("Error, expected to get Disk with name '%s', got '%s' instead",
+		t.Errorf("Error, expected to get hosting.Disk with name '%s', got '%s' instead",
 			diskname, disks[0].Name)
 	}
 }
@@ -241,7 +242,7 @@ func TestDeleteDisk(t *testing.T) {
 	mockClient.EXPECT().Send("operation.info",
 		paramsWait, gomock.Any()).SetArg(2, responseWait).Return(nil).After(delete)
 
-	err := testHosting.DeleteDisk(Disk{ID: diskidstr})
+	err := testHosting.DeleteDisk(hosting.Disk{ID: diskidstr})
 	if err != nil {
 		t.Errorf("Error, expected disk to be deleted, got error '%v' instead", err)
 	}
@@ -277,7 +278,7 @@ func TestExtendDisk(t *testing.T) {
 	mockClient.EXPECT().Send("hosting.disk.info",
 		paramsDiskInfo, gomock.Any()).SetArg(2, responseDiskInfo).Return(nil).After(wait)
 
-	diskparam := Disk{ID: strconv.Itoa(disks[0].ID), Size: 10}
+	diskparam := hosting.Disk{ID: strconv.Itoa(disks[0].ID), Size: 10}
 	disk, _ := testHosting.ExtendDisk(diskparam, extendSize)
 	expectedDiskSize := (disks[0].Size + sizeInMB) / 1024
 	if disk.Size != expectedDiskSize {
@@ -316,7 +317,7 @@ func TestRenameDisk(t *testing.T) {
 	mockClient.EXPECT().Send("hosting.disk.info",
 		paramsDiskInfo, gomock.Any()).SetArg(2, responseDiskInfo).Return(nil).After(wait)
 
-	diskparam := Disk{ID: strconv.Itoa(disks[0].ID)}
+	diskparam := hosting.Disk{ID: strconv.Itoa(disks[0].ID)}
 	disk, _ := testHosting.RenameDisk(diskparam, newName)
 	if disk.Name != newName {
 		t.Errorf("Error, expected disk name to be %s, got '%s' instead",
@@ -328,7 +329,7 @@ func TestDeleteDiskBadID(t *testing.T) {
 	cl, _ := client.NewClientv4("", "1234")
 	testHosting := Newv4Hosting(cl)
 
-	disk := Disk{
+	disk := hosting.Disk{
 		ID: "ThisisnotAnID",
 	}
 	err := testHosting.DeleteDisk(disk)
@@ -341,7 +342,7 @@ func TestCreateDiskBadRegionID(t *testing.T) {
 	cl, _ := client.NewClientv4("", "1234")
 	testHosting := Newv4Hosting(cl)
 
-	diskspec := DiskSpec{
+	diskspec := hosting.DiskSpec{
 		RegionID: "ThisisnotAnID",
 	}
 	_, err := testHosting.CreateDisk(diskspec)
@@ -354,7 +355,7 @@ func TestFilterDisksBadID(t *testing.T) {
 	cl, _ := client.NewClientv4("", "1234")
 	testHosting := Newv4Hosting(cl)
 
-	filter := DiskFilter{
+	filter := hosting.DiskFilter{
 		ID: "ThisisnotAnID",
 	}
 	_, err := testHosting.ListDisks(filter)
@@ -367,7 +368,7 @@ func TestFilterDisksBadRegionID(t *testing.T) {
 	cl, _ := client.NewClientv4("", "1234")
 	testHosting := Newv4Hosting(cl)
 
-	filter := DiskFilter{
+	filter := hosting.DiskFilter{
 		RegionID: "ThisisnotAnID",
 	}
 	_, err := testHosting.ListDisks(filter)
@@ -380,7 +381,7 @@ func TestFilterDisksBadVMID(t *testing.T) {
 	cl, _ := client.NewClientv4("", "1234")
 	testHosting := Newv4Hosting(cl)
 
-	filter := DiskFilter{
+	filter := hosting.DiskFilter{
 		VMID: "ThisisnotAnID",
 	}
 	_, err := testHosting.ListDisks(filter)

@@ -3,6 +3,7 @@ package hostingv4
 import (
 	"testing"
 
+	"github.com/PabloPie/go-gandi/hosting"
 	"github.com/PabloPie/go-gandi/mock"
 	"github.com/golang/mock/gomock"
 )
@@ -39,7 +40,7 @@ func TestCreateSSHKey(t *testing.T) {
 	mockClient.EXPECT().Send("hosting.ssh.info",
 		paramsKeyInfo, gomock.Any()).SetArg(2, responseCreateKey).Return(nil).After(create)
 
-	expectedSSHKey := SSHKey{
+	expectedSSHKey := hosting.SSHKey{
 		ID:          keyidstr,
 		Name:        keyname,
 		Fingerprint: fingerprint,
@@ -65,7 +66,7 @@ func TestDeleteSSHKey(t *testing.T) {
 	mockClient.EXPECT().Send("hosting.ssh.delete",
 		paramsDeleteKey, gomock.Any()).SetArg(2, true).Return(nil)
 
-	key := SSHKey{
+	key := hosting.SSHKey{
 		ID: keyidstr,
 	}
 	err := testHosting.DeleteKey(key)
@@ -80,7 +81,7 @@ func TestDeleteSSHKeyBadID(t *testing.T) {
 	mockClient := mock.NewMockV4Caller(mockCtrl)
 	testHosting := Newv4Hosting(mockClient)
 
-	key := SSHKey{
+	key := hosting.SSHKey{
 		ID: "thisisnotanint",
 	}
 	err := testHosting.DeleteKey(key)
@@ -112,7 +113,7 @@ func TestKeyFromName(t *testing.T) {
 	mockClient.EXPECT().Send("hosting.ssh.info",
 		paramsKeyInfo, gomock.Any()).SetArg(2, responseListKeys[0]).Return(nil).After(list)
 
-	expectedKey := SSHKey{
+	expectedKey := hosting.SSHKey{
 		ID:          keyidstr,
 		Name:        keyname,
 		Fingerprint: fingerprint,

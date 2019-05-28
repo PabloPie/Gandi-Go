@@ -68,12 +68,12 @@ func TestCreateVM(t *testing.T) {
 	mockClient.EXPECT().Send("hosting.vm.info",
 		paramsVMInfo, gomock.Any()).SetArg(2, responseVMInfo).Return(nil).After(wait)
 
-	vmspec := VMSpec{
+	vmspec := hosting.VMSpec{
 		RegionID:  regionstr,
 		Hostname:  vmname,
 		SSHKeysID: []string{"key1"},
 	}
-	diskimage := DiskImage{
+	diskimage := hosting.DiskImage{
 		DiskID:   imageidstr,
 		Size:     3,
 		Name:     "Debian 9",
@@ -83,11 +83,11 @@ func TestCreateVM(t *testing.T) {
 	if err != nil {
 		log.Println(err)
 	}
-	expectedIPS := []IPAddress{{ID: "1", IP: "192.168.1.1", RegionID: regionstr,
+	expectedIPS := []hosting.IPAddress{{ID: "1", IP: "192.168.1.1", RegionID: regionstr,
 		Version: hosting.IPVersion(4), VM: vmidstr, State: "used"}}
-	expectedDisks := []Disk{{ID: diskidstr, Name: "sysdisk_1", Size: disksize, RegionID: regionstr,
+	expectedDisks := []hosting.Disk{{ID: diskidstr, Name: "sysdisk_1", Size: disksize, RegionID: regionstr,
 		State: "created", Type: "data", VM: []string{vmidstr}, BootDisk: true}}
-	expected := VM{
+	expected := hosting.VM{
 		ID:          vmidstr,
 		Hostname:    vmname,
 		RegionID:    regionstr,
@@ -98,7 +98,7 @@ func TestCreateVM(t *testing.T) {
 		DateCreated: now,
 		Ips:         expectedIPS,
 		Disks:       expectedDisks,
-		SSHKeysID:   []string{"key1"},
+		SSHKeys:     []string{"key1"},
 		State:       "running",
 	}
 
@@ -146,17 +146,17 @@ func TestCreateVMWithExistingIP(t *testing.T) {
 	mockClient.EXPECT().Send("hosting.vm.info",
 		paramsVMInfo, gomock.Any()).SetArg(2, responseVMInfo).Return(nil).After(wait)
 
-	vmspec := VMSpec{
+	vmspec := hosting.VMSpec{
 		RegionID: regionstr,
 		Hostname: vmname,
 	}
-	diskimage := DiskImage{
+	diskimage := hosting.DiskImage{
 		DiskID:   imageidstr,
 		Size:     3,
 		Name:     "Debian 9",
 		RegionID: regionstr,
 	}
-	ip := IPAddress{
+	ip := hosting.IPAddress{
 		ID:       "1",
 		IP:       "192.168.1.1",
 		RegionID: regionstr,
@@ -168,11 +168,11 @@ func TestCreateVMWithExistingIP(t *testing.T) {
 		log.Println(err)
 	}
 
-	expectedIPS := []IPAddress{{ID: "1", IP: "192.168.1.1", RegionID: regionstr,
+	expectedIPS := []hosting.IPAddress{{ID: "1", IP: "192.168.1.1", RegionID: regionstr,
 		Version: hosting.IPVersion(4), VM: vmidstr, State: "used"}}
-	expectedDisks := []Disk{{ID: diskidstr, Name: "sysdisk_1", Size: disksize, RegionID: regionstr,
+	expectedDisks := []hosting.Disk{{ID: diskidstr, Name: "sysdisk_1", Size: disksize, RegionID: regionstr,
 		State: "created", Type: "data", VM: []string{vmidstr}, BootDisk: true}}
-	expected := VM{
+	expected := hosting.VM{
 		ID:          vmidstr,
 		Hostname:    vmname,
 		RegionID:    regionstr,
@@ -228,15 +228,15 @@ func TestCreateVMWithExistingDiskAndIP(t *testing.T) {
 	mockClient.EXPECT().Send("hosting.vm.info",
 		paramsVMInfo, gomock.Any()).SetArg(2, responseVMInfo).Return(nil).After(wait)
 
-	vmspec := VMSpec{
+	vmspec := hosting.VMSpec{
 		RegionID: regionstr,
 		Hostname: vmname,
 	}
-	disk := Disk{
+	disk := hosting.Disk{
 		ID:       "1",
 		RegionID: regionstr,
 	}
-	ip := IPAddress{
+	ip := hosting.IPAddress{
 		ID:       "1",
 		IP:       "192.168.1.1",
 		RegionID: regionstr,
@@ -248,11 +248,11 @@ func TestCreateVMWithExistingDiskAndIP(t *testing.T) {
 		log.Println(err)
 	}
 
-	expectedIPS := []IPAddress{{ID: "1", IP: "192.168.1.1", RegionID: regionstr,
+	expectedIPS := []hosting.IPAddress{{ID: "1", IP: "192.168.1.1", RegionID: regionstr,
 		Version: hosting.IPVersion(4), VM: vmidstr, State: "used"}}
-	expectedDisks := []Disk{{ID: "1", Name: "sysdisk_1", Size: disksize, RegionID: regionstr,
+	expectedDisks := []hosting.Disk{{ID: "1", Name: "sysdisk_1", Size: disksize, RegionID: regionstr,
 		State: "created", Type: "data", VM: []string{vmidstr}, BootDisk: true}}
-	expected := VM{
+	expected := hosting.VM{
 		ID:          vmidstr,
 		Hostname:    vmname,
 		RegionID:    regionstr,
@@ -302,16 +302,16 @@ func TestDiskDetach(t *testing.T) {
 	mockClient.EXPECT().Send("hosting.disk.info",
 		paramsDiskInfo, gomock.Any()).SetArg(2, responseDiskInfo).Return(nil).After(info)
 
-	disks := []Disk{
+	disks := []hosting.Disk{
 		{"4", "disk2", 10, regionstr, "created", "data", []string{"3"}, false},
 		{"1", "sysdisk_1", disksize, regionstr, "created", "data", []string{"3"}, true},
 	}
-	vm := VM{ID: "3", Disks: disks}
-	disk := Disk{ID: "4"}
+	vm := hosting.VM{ID: "3", Disks: disks}
+	disk := hosting.Disk{ID: "4"}
 	vmres, _, _ := testHosting.DetachDisk(vm, disk)
 
-	expectedDisks := []Disk{{"4", "disk2", 10, regionstr, "created", "data", []string{"3"}, false}}
-	expected := VM{
+	expectedDisks := []hosting.Disk{{"4", "disk2", 10, regionstr, "created", "data", []string{"3"}, false}}
+	expected := hosting.VM{
 		ID:    "3",
 		Disks: expectedDisks,
 	}
@@ -330,19 +330,19 @@ func TestDiskAttachAtPosition(t *testing.T) {
 	vmid := 666
 	vmidStr := strconv.Itoa(vmid)
 
-	disks := []Disk{
+	disks := []hosting.Disk{
 		{"1", "d1", disksize, regionstr, "created", "data", []string{vmidStr}, true},
 		{"2", "d2", disksize, regionstr, "created", "data", []string{vmidStr}, true},
 		{"3", "d3", disksize, regionstr, "created", "data", []string{vmidStr}, true},
 	}
 	diskid := 3
 	diskidStr := strconv.Itoa(diskid)
-	disk := Disk{ID: diskidStr}
+	disk := hosting.Disk{ID: diskidStr}
 
 	position := 0
 
-	vm := VM{ID: vmidStr, Disks: []Disk{disks[0], disks[1], disks[2]}}
-	expectedVm := VM{ID: vmidstr, Disks: []Disk{disks[2], disks[1], disks[0]}}
+	vm := hosting.VM{ID: vmidStr, Disks: []hosting.Disk{disks[0], disks[1], disks[2]}}
+	expectedVM := hosting.VM{ID: vmidstr, Disks: []hosting.Disk{disks[2], disks[1], disks[0]}}
 
 	parameters := []interface{}{vmid, diskid, map[string]interface{}{"position": position}}
 	response := Operation{ID: 1337, DiskID: diskid, VMID: vmid}
@@ -373,8 +373,8 @@ func TestDiskAttachAtPosition(t *testing.T) {
 	vmres, _, _ := testHosting.AttachDiskAtPosition(vm, disk, position)
 
 	for i := range vmres.Disks {
-		if expectedVm.Disks[i].ID != vmres.Disks[i].ID {
-			t.Errorf("Error, disk %d does not match, expected %v, got %v instead", i, expectedVm.Disks[i], vmres.Disks[i])
+		if expectedVM.Disks[i].ID != vmres.Disks[i].ID {
+			t.Errorf("Error, disk %d does not match, expected %v, got %v instead", i, expectedVM.Disks[i], vmres.Disks[i])
 		}
 	}
 }
@@ -415,16 +415,16 @@ func TestIPDetach(t *testing.T) {
 	mockClient.EXPECT().Send("hosting.ip.info",
 		paramsIPInfo2, gomock.Any()).SetArg(2, responseIPInfo2).Return(nil).After(info)
 
-	ips := []IPAddress{
+	ips := []hosting.IPAddress{
 		{"2", "192.168.1.1", regionstr, hosting.IPVersion(4), "3", "used"},
 		{"3", "192.168.10.2", regionstr, hosting.IPVersion(4), "3", "used"},
 	}
-	vm := VM{ID: "3", Ips: ips}
-	ip := IPAddress{ID: "3"}
+	vm := hosting.VM{ID: "3", Ips: ips}
+	ip := hosting.IPAddress{ID: "3"}
 	vmres, _, _ := testHosting.DetachIP(vm, ip)
 
-	expectedIPS := []IPAddress{{"2", "192.168.1.1", regionstr, hosting.IPVersion(4), "3", "used"}}
-	expected := VM{
+	expectedIPS := []hosting.IPAddress{{"2", "192.168.1.1", regionstr, hosting.IPVersion(4), "3", "used"}}
+	expected := hosting.VM{
 		ID:  "3",
 		Ips: expectedIPS,
 	}
@@ -450,7 +450,7 @@ func TestVMStop(t *testing.T) {
 	mockClient.EXPECT().Send("operation.info",
 		paramsWait, gomock.Any()).SetArg(2, responseWait).Return(nil).After(stop)
 
-	err := testHosting.StopVM(VM{ID: "3"})
+	err := testHosting.StopVM(hosting.VM{ID: "3"})
 
 	if err != nil {
 		t.Errorf("Error, %s", err)
@@ -490,11 +490,11 @@ func TestCreateVMWithExistingDisk(t *testing.T) {
 	mockClient.EXPECT().Send("hosting.vm.info",
 		paramsVMInfo, gomock.Any()).SetArg(2, responseVMInfo).Return(nil).After(wait)
 
-	vmspec := VMSpec{
+	vmspec := hosting.VMSpec{
 		RegionID: regionstr,
 		Hostname: vmname,
 	}
-	disk := Disk{
+	disk := hosting.Disk{
 		ID:       "5",
 		Name:     "sysdisk_1",
 		Size:     disksize,
@@ -510,9 +510,9 @@ func TestCreateVMWithExistingDisk(t *testing.T) {
 		log.Println(err)
 	}
 
-	expectedIPS := []IPAddress{{"1", "192.168.1.1", regionstr, hosting.IPVersion(4), vmidstr, "used"}}
-	expectedDisks := []Disk{{"5", "sysdisk_1", disksize, regionstr, "created", "data", []string{vmidstr}, true}}
-	expected := VM{
+	expectedIPS := []hosting.IPAddress{{"1", "192.168.1.1", regionstr, hosting.IPVersion(4), vmidstr, "used"}}
+	expectedDisks := []hosting.Disk{{"5", "sysdisk_1", disksize, regionstr, "created", "data", []string{vmidstr}, true}}
+	expected := hosting.VM{
 		ID:          vmidstr,
 		Hostname:    vmname,
 		RegionID:    regionstr,
@@ -554,9 +554,9 @@ func TestVMFromName(t *testing.T) {
 
 	vm, _ := testHosting.VMFromName(vmname)
 
-	expectedIPS := []IPAddress{{"1", "192.168.1.1", regionstr, hosting.IPVersion(4), vmidstr, "used"}}
-	expectedDisks := []Disk{{"5", "sysdisk_1", disksize, regionstr, "created", "data", []string{vmidstr}, true}}
-	expected := VM{
+	expectedIPS := []hosting.IPAddress{{"1", "192.168.1.1", regionstr, hosting.IPVersion(4), vmidstr, "used"}}
+	expectedDisks := []hosting.Disk{{"5", "sysdisk_1", disksize, regionstr, "created", "data", []string{vmidstr}, true}}
+	expected := hosting.VM{
 		ID:          vmidstr,
 		Hostname:    vmname,
 		RegionID:    regionstr,
@@ -601,12 +601,12 @@ func TestRenameVM(t *testing.T) {
 	mockClient.EXPECT().Send("hosting.vm.info",
 		paramsVMInfo, gomock.Any()).SetArg(2, responseVMInfo).Return(nil).After(wait)
 
-	vmreq := VM{ID: vmidstr}
+	vmreq := hosting.VM{ID: vmidstr}
 	vm, _ := testHosting.RenameVM(vmreq, "NEWNAME")
 
-	expectedIPS := []IPAddress{{"1", "192.168.1.1", regionstr, hosting.IPVersion(4), vmidstr, "used"}}
-	expectedDisks := []Disk{{"5", "sysdisk_1", disksize, regionstr, "created", "data", []string{vmidstr}, true}}
-	expected := VM{
+	expectedIPS := []hosting.IPAddress{{"1", "192.168.1.1", regionstr, hosting.IPVersion(4), vmidstr, "used"}}
+	expectedDisks := []hosting.Disk{{"5", "sysdisk_1", disksize, regionstr, "created", "data", []string{vmidstr}, true}}
+	expected := hosting.VM{
 		ID:          vmidstr,
 		Hostname:    "NEWNAME",
 		RegionID:    regionstr,

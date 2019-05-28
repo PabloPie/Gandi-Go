@@ -46,7 +46,7 @@ type VM struct {
 	DateCreated time.Time
 	Ips         []IPAddress
 	Disks       []Disk
-	SSHKeysID   []string
+	SSHKeys     []string
 	State       string
 }
 

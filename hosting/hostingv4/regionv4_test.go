@@ -5,6 +5,7 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/PabloPie/go-gandi/hosting"
 	"github.com/PabloPie/go-gandi/mock"
 	"github.com/golang/mock/gomock"
 )
@@ -27,7 +28,7 @@ func TestListRegions(t *testing.T) {
 		[]interface{}{},
 		gomock.Any()).SetArg(2, regionsv4).Return(nil)
 
-	var expected []Region
+	var expected []hosting.Region
 	for _, r := range regionsv4 {
 		expected = append(expected, fromRegionv4(r))
 	}
@@ -52,14 +53,14 @@ func TestAllRegionsByCode(t *testing.T) {
 
 func TestRegionByBadCode(t *testing.T) {
 	r, err := testRegionByCode(t, "BAD-DC")
-	expected := errors.New("Region not found")
+	expected := errors.New("hosting.Region not found")
 
 	if !reflect.DeepEqual(expected, err) {
 		t.Errorf("Error, expected %+v, got instead %+v (%+v)", expected, err, r)
 	}
 }
 
-func testRegionByCode(t *testing.T, code string) (Region, error) {
+func testRegionByCode(t *testing.T, code string) (hosting.Region, error) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 	mockClient := mock.NewMockV4Caller(mockCtrl)

@@ -31,7 +31,7 @@ var (
 	}
 )
 
-var regions = []Region{
+var regions = []hosting.Region{
 	{ID: "123", Name: "Datacentre 123", Country: "France"},
 	{ID: "456", Name: "Datacenter 456", Country: "United Kingdom"},
 	{ID: "789", Name: "Centro de datos 789", Country: "Espana"},
@@ -47,7 +47,7 @@ func TestCreateIPv4(t *testing.T) {
 	testCreateIP(t, hosting.IPv4, "92.243.17.196", regions[2])
 }
 
-func testCreateIP(t *testing.T, version hosting.IPVersion, theIP string, region Region) {
+func testCreateIP(t *testing.T, version hosting.IPVersion, theIP string, region hosting.Region) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 	mockClient := mock.NewMockV4Caller(mockCtrl)
@@ -77,7 +77,7 @@ func testCreateIP(t *testing.T, version hosting.IPVersion, theIP string, region 
 		State:    "created",
 	}
 
-	ipexpected := IPAddress{
+	ipexpected := hosting.IPAddress{
 		ID:       "1337",
 		IP:       theIP,
 		RegionID: region.ID,
@@ -186,7 +186,7 @@ func TestListAllIP(t *testing.T) {
 	mockClient := mock.NewMockV4Caller(mockCtrl)
 	testHosting := Newv4Hosting(mockClient)
 
-	filter := IPFilter{}
+	filter := hosting.IPFilter{}
 	ipmap, _ := ipFilterToMap(filter)
 
 	mockClient.EXPECT().Send("hosting.ip.list",
@@ -195,7 +195,7 @@ func TestListAllIP(t *testing.T) {
 
 	ipsresult, _ := testHosting.ListIPs(filter)
 
-	var expected []IPAddress
+	var expected []hosting.IPAddress
 	for _, ip := range ipsv4 {
 		expected = append(expected, toIPAddress(ip))
 	}
@@ -208,7 +208,7 @@ func TestListAllIP(t *testing.T) {
 func TestListAllIPv4(t *testing.T) {
 	ipsresult, _ := testListIPsByVersion(t, hosting.IPv4)
 
-	var expected []IPAddress
+	var expected []hosting.IPAddress
 	for _, ip := range ipsv4 {
 		if ip.Version == 4 {
 			expected = append(expected, toIPAddress(ip))
@@ -223,7 +223,7 @@ func TestListAllIPv4(t *testing.T) {
 func TestListAllIPv6(t *testing.T) {
 	ipsresult, _ := testListIPsByVersion(t, hosting.IPv6)
 
-	var expected []IPAddress
+	var expected []hosting.IPAddress
 	for _, ip := range ipsv4 {
 		if ip.Version == 6 {
 			expected = append(expected, toIPAddress(ip))
@@ -244,21 +244,21 @@ func TestListIPsBadVersion(t *testing.T) {
 	defer mockCtrl.Finish()
 	mockClient := mock.NewMockV4Caller(mockCtrl)
 	testHosting := Newv4Hosting(mockClient)
-	_, err := testHosting.ListIPs(IPFilter{Version: 5})
-	expected := internalParseError("IPFilter", "Version")
+	_, err := testHosting.ListIPs(hosting.IPFilter{Version: 5})
+	expected := internalParseError("hosting.IPFilter", "Version")
 
 	if !reflect.DeepEqual(expected, err) {
 		t.Errorf("Error, expected %+v, got instead %+v", expected, err)
 	}
 }
 
-func testListIPsByVersion(t *testing.T, version hosting.IPVersion) ([]IPAddress, error) {
+func testListIPsByVersion(t *testing.T, version hosting.IPVersion) ([]hosting.IPAddress, error) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 	mockClient := mock.NewMockV4Caller(mockCtrl)
 	testHosting := Newv4Hosting(mockClient)
 
-	filter := IPFilter{Version: version}
+	filter := hosting.IPFilter{Version: version}
 	ipmap, _ := ipFilterToMap(filter)
 
 	var ipsv4version []iPAddressv4
@@ -283,7 +283,7 @@ func TestListIPsByIP(t *testing.T) {
 	testHosting := Newv4Hosting(mockClient)
 
 	ip := ipsv4[0]
-	filter := IPFilter{IP: ip.IP}
+	filter := hosting.IPFilter{IP: ip.IP}
 	ipmap, _ := ipFilterToMap(filter)
 
 	mockClient.EXPECT().Send("hosting.ip.list",
@@ -292,7 +292,7 @@ func TestListIPsByIP(t *testing.T) {
 
 	ipsresult, _ := testHosting.ListIPs(filter)
 
-	var expected []IPAddress
+	var expected []hosting.IPAddress
 	for _, iip := range ipsv4 {
 		if iip.IP == ip.IP {
 			expected = append(expected, toIPAddress(iip))
@@ -316,7 +316,7 @@ func TestListIPsByID(t *testing.T) {
 
 	ip := ipsv4[1]
 	idString := strconv.Itoa(ip.ID)
-	filter := IPFilter{ID: idString}
+	filter := hosting.IPFilter{ID: idString}
 	ipmap, _ := ipFilterToMap(filter)
 
 	mockClient.EXPECT().Send("hosting.ip.list",
@@ -325,7 +325,7 @@ func TestListIPsByID(t *testing.T) {
 
 	ipsresult, _ := testHosting.ListIPs(filter)
 
-	var expected []IPAddress
+	var expected []hosting.IPAddress
 	for _, iip := range ipsv4 {
 		if iip.ID == ip.ID {
 			expected = append(expected, toIPAddress(iip))
@@ -349,11 +349,11 @@ func TestListIPsByRegionID(t *testing.T) {
 
 	regionID := testRegionID
 	regionIDString := strconv.Itoa(testRegionID)
-	filter := IPFilter{RegionID: regionIDString}
+	filter := hosting.IPFilter{RegionID: regionIDString}
 	ipmap, _ := ipFilterToMap(filter)
 
 	var ipsv4region []iPAddressv4
-	var expected []IPAddress
+	var expected []hosting.IPAddress
 	for _, iip := range ipsv4 {
 		if iip.RegionID == regionID {
 			ipsv4region = append(ipsv4region, iip)
@@ -383,11 +383,11 @@ func TestListIPsByRegionIDAndVersion(t *testing.T) {
 	version := testVersion
 	versionInt := int(testVersion)
 
-	filter := IPFilter{RegionID: regionIDString, Version: version}
+	filter := hosting.IPFilter{RegionID: regionIDString, Version: version}
 	ipmap, _ := ipFilterToMap(filter)
 
 	var ipsv4region []iPAddressv4
-	var expected []IPAddress
+	var expected []hosting.IPAddress
 	for _, iip := range ipsv4 {
 		if iip.RegionID == regionID && iip.Version == versionInt {
 			ipsv4region = append(ipsv4region, iip)
@@ -414,7 +414,7 @@ func TestDeleteIPBadID(t *testing.T) {
 	cl, _ := client.NewClientv4("", "1234")
 	testHosting := Newv4Hosting(cl)
 
-	ip := IPAddress{
+	ip := hosting.IPAddress{
 		ID: "ThisisnotAnID",
 	}
 	err := testHosting.DeleteIP(ip)
@@ -427,7 +427,7 @@ func TestCreateIPBadRegionID(t *testing.T) {
 	cl, _ := client.NewClientv4("", "1234")
 	testHosting := Newv4Hosting(cl)
 
-	region := Region{
+	region := hosting.Region{
 		ID: "ThisisnotAnID",
 	}
 	_, err := testHosting.CreateIP(region, hosting.IPVersion(4))
@@ -440,7 +440,7 @@ func TestFilterBadID(t *testing.T) {
 	cl, _ := client.NewClientv4("", "1234")
 	testHosting := Newv4Hosting(cl)
 
-	filter := IPFilter{
+	filter := hosting.IPFilter{
 		ID: "ThisisnotAnID",
 	}
 	_, err := testHosting.ListIPs(filter)
@@ -453,7 +453,7 @@ func TestFilterBadRegionID(t *testing.T) {
 	cl, _ := client.NewClientv4("", "1234")
 	testHosting := Newv4Hosting(cl)
 
-	filter := IPFilter{
+	filter := hosting.IPFilter{
 		RegionID: "ThisisnotAnID",
 	}
 	_, err := testHosting.ListIPs(filter)

@@ -7,13 +7,6 @@ import (
 	"github.com/PabloPie/go-gandi/hosting"
 )
 
-type (
-	// IPAddress is an alias for the Hosting object
-	IPAddress = hosting.IPAddress
-	// IPFilter is an alias for the Hosting object
-	IPFilter = hosting.IPFilter
-)
-
 // Private representation of an ip object in v4 of
 // Gandi's API, where IDs are integers instead of strings
 type iPAddressv4 struct {
@@ -37,11 +30,11 @@ type iface struct {
 
 // CreateIP creates an ip object that represents a public IP, either v4 or v6
 //
-// It requires a valid Region object, whose only mandatory field is its ID
+// It requires a valid hosting.Region object, whose only mandatory field is its ID
 // An ipv6 is always created for the interface, even when only an ipv4 is requested
-func (h Hostingv4) CreateIP(region Region, version hosting.IPVersion) (IPAddress, error) {
+func (h Hostingv4) CreateIP(region hosting.Region, version hosting.IPVersion) (hosting.IPAddress, error) {
 	if version != hosting.IPv4 && version != hosting.IPv6 {
-		return IPAddress{}, errors.New("Bad IP version")
+		return hosting.IPAddress{}, errors.New("Bad IP version")
 	}
 
 	var err error
@@ -51,7 +44,7 @@ func (h Hostingv4) CreateIP(region Region, version hosting.IPVersion) (IPAddress
 
 	regionID, err = strconv.Atoi(region.ID)
 	if err != nil {
-		return IPAddress{}, internalParseError("Region", "ID")
+		return hosting.IPAddress{}, internalParseError("hosting.Region", "ID")
 	}
 
 	err = h.Send("hosting.iface.create", []interface{}{
@@ -61,21 +54,21 @@ func (h Hostingv4) CreateIP(region Region, version hosting.IPVersion) (IPAddress
 			"bandwidth":     hosting.DefaultBandwidth,
 		}}, &response)
 	if err != nil {
-		return IPAddress{}, err
+		return hosting.IPAddress{}, err
 	}
 	if err = h.waitForOp(response); err != nil {
-		return IPAddress{}, err
+		return hosting.IPAddress{}, err
 	}
 
 	if err = h.Send("hosting.ip.info", []interface{}{response.IPID}, &iip); err != nil {
-		return IPAddress{}, err
+		return hosting.IPAddress{}, err
 	}
 
 	return toIPAddress(iip), nil
 }
 
 // ListIPs returns a list of ips filtered with the options provided in `diskFilter`
-func (h Hostingv4) ListIPs(ipfilter IPFilter) ([]IPAddress, error) {
+func (h Hostingv4) ListIPs(ipfilter hosting.IPFilter) ([]hosting.IPAddress, error) {
 	ipmap, err := ipFilterToMap(ipfilter)
 	if err != nil {
 		return nil, err
@@ -86,7 +79,7 @@ func (h Hostingv4) ListIPs(ipfilter IPFilter) ([]IPAddress, error) {
 		return nil, err
 	}
 
-	var ips []IPAddress
+	var ips []hosting.IPAddress
 	for _, iip := range response {
 		ips = append(ips, toIPAddress(iip))
 	}
@@ -98,10 +91,10 @@ func (h Hostingv4) ListIPs(ipfilter IPFilter) ([]IPAddress, error) {
 //
 // It will also delete the associated interface, so if it is
 // an ipv4, the corresponding ipv6 will also be deleted
-func (h Hostingv4) DeleteIP(ip IPAddress) error {
+func (h Hostingv4) DeleteIP(ip hosting.IPAddress) error {
 	ipid, err := strconv.Atoi(ip.ID)
 	if err != nil {
-		return internalParseError("IPAddress", "ID")
+		return internalParseError("hosting.IPAddress", "ID")
 	}
 
 	var response = Operation{}
@@ -130,24 +123,24 @@ func (h Hostingv4) ifaceIDFromIPID(ipid int) (int, error) {
 }
 
 // Helper function to get an IP object from its v4 ID
-func (h Hostingv4) ipFromID(ipid int) (IPAddress, error) {
+func (h Hostingv4) ipFromID(ipid int) (hosting.IPAddress, error) {
 	response := iPAddressv4{}
 	err := h.Send("hosting.ip.info", []interface{}{ipid}, &response)
 	if err != nil {
-		return IPAddress{}, err
+		return hosting.IPAddress{}, err
 	}
 	return toIPAddress(response), nil
 }
 
 // Internal methods to convert Hosting structures to v4 structures
 
-func ipFilterToMap(ipfilter IPFilter) (map[string]interface{}, error) {
+func ipFilterToMap(ipfilter hosting.IPFilter) (map[string]interface{}, error) {
 	ipmap := make(map[string]interface{})
 	var err error
 
 	if ipfilter.Version != 0 {
 		if ipfilter.Version != hosting.IPv4 && ipfilter.Version != hosting.IPv6 {
-			return nil, internalParseError("IPFilter", "Version")
+			return nil, internalParseError("hosting.IPFilter", "Version")
 		}
 		ipmap["version"] = int(ipfilter.Version)
 	}
@@ -155,13 +148,13 @@ func ipFilterToMap(ipfilter IPFilter) (map[string]interface{}, error) {
 	if ipfilter.ID != "" {
 		ipmap["id"], err = strconv.Atoi(ipfilter.ID)
 		if err != nil {
-			return nil, internalParseError("IPFilter", "ID")
+			return nil, internalParseError("hosting.IPFilter", "ID")
 		}
 	}
 	if ipfilter.RegionID != "" {
 		ipmap["datacenter_id"], err = strconv.Atoi(ipfilter.RegionID)
 		if err != nil {
-			return nil, internalParseError("IPFilter", "ID")
+			return nil, internalParseError("hosting.IPFilter", "ID")
 		}
 	}
 
@@ -172,8 +165,8 @@ func ipFilterToMap(ipfilter IPFilter) (map[string]interface{}, error) {
 	return ipmap, nil
 }
 
-// v4 API IP -> Hosting IPAddress
-func toIPAddress(iip iPAddressv4) (ip IPAddress) {
+// v4 API IP -> Hosting hosting.IPAddress
+func toIPAddress(iip iPAddressv4) (ip hosting.IPAddress) {
 	ip.ID = strconv.Itoa(iip.ID)
 	ip.IP = iip.IP
 	ip.RegionID = strconv.Itoa(iip.RegionID)

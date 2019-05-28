@@ -3,6 +3,8 @@ package hostingv4
 import (
 	"errors"
 	"strconv"
+
+	"github.com/PabloPie/go-gandi/hosting"
 )
 
 type regionv4 struct {
@@ -12,15 +14,15 @@ type regionv4 struct {
 }
 
 // ListRegions lists every Gandi datacenter
-func (h Hostingv4) ListRegions() ([]Region, error) {
+func (h Hostingv4) ListRegions() ([]hosting.Region, error) {
 	response := []regionv4{}
 	request := []interface{}{}
 	err := h.Send("hosting.datacenter.list", request, &response)
 	if err != nil {
-		return []Region{}, err
+		return []hosting.Region{}, err
 	}
 
-	var regions = []Region{}
+	var regions = []hosting.Region{}
 	for _, region := range response {
 		regions = append(regions, fromRegionv4(region))
 	}
@@ -28,16 +30,16 @@ func (h Hostingv4) ListRegions() ([]Region, error) {
 }
 
 // RegionbyCode returns the region with code `code` if it exists
-func (h Hostingv4) RegionbyCode(code string) (Region, error) {
+func (h Hostingv4) RegionbyCode(code string) (hosting.Region, error) {
 	response := []regionv4{}
 	filter := map[string]string{"dc_code": code}
 	request := []interface{}{filter}
 	err := h.Send("hosting.datacenter.list", request, &response)
 	if err != nil {
-		return Region{}, err
+		return hosting.Region{}, err
 	}
 	if len(response) < 1 {
-		return Region{}, errors.New("Region not found")
+		return hosting.Region{}, errors.New("hosting.Region not found")
 	}
 
 	return fromRegionv4(response[0]), nil
@@ -45,10 +47,10 @@ func (h Hostingv4) RegionbyCode(code string) (Region, error) {
 
 // Conversion functions
 
-// regionv4 -> Hosting Region
-func fromRegionv4(region regionv4) Region {
+// regionv4 -> Hosting hosting.Region
+func fromRegionv4(region regionv4) hosting.Region {
 	id := strconv.Itoa(region.ID)
-	return Region{
+	return hosting.Region{
 		ID:      id,
 		Name:    region.Name,
 		Country: region.Country,
