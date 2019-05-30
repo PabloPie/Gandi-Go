@@ -4,11 +4,10 @@ package hosting
 // private networks within Gandi's platform
 type VlanManager interface {
 	CreateVlan(vlan VlanSpec) Vlan
-	// another filter
-	InfoVlan(vlanid int) Vlan
+	InfoVlan(vlan Vlan) Vlan
 	ListVlan() []Vlan
-	UpdateVlanGW(vlan *Vlan) error
-	RenameVlan(vlan *Vlan) error
+	UpdateVlanGW(vlan Vlan) error
+	RenameVlan(vlan Vlan) error
 }
 
 // Vlan represents a private network
