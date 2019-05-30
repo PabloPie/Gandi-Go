@@ -389,3 +389,70 @@ func TestFilterDisksBadVMID(t *testing.T) {
 		t.Errorf("Error, expected error when parsing ID")
 	}
 }
+
+func TestDiskFunctionsBadID(t *testing.T) {
+	cl, _ := client.NewClientv4("", "1234")
+	testHosting := Newv4Hosting(cl)
+	
+	disk := hosting.Disk{}
+
+	_, err := testHosting.RenameDisk(disk, "Nom")
+	
+	if (err.(*HostingError).Err != ErrNotProvided) {
+		t.Errorf("Error, Null ID expected in RenameDisk")
+	}
+	
+	_, err = testHosting.ExtendDisk(disk, 1)
+	if (err.(*HostingError).Err != ErrNotProvided) {
+		t.Errorf("Error, Null ID expected in ExtendDisk")
+	}
+	
+	err = testHosting.DeleteDisk(disk)
+	if (err.(*HostingError).Err != ErrNotProvided) {
+		t.Errorf("Error, Null ID expected in DeleteDisk")
+	}
+
+	err = testHosting.DeleteDisk(disk)
+	if (err.(*HostingError).Err != ErrNotProvided) {
+		t.Errorf("Error, Null ID expected in DeleteDisk")
+	}
+
+	disk.ID = "badid"
+	_, err = testHosting.RenameDisk(disk, "nom")
+
+	if (err.(*HostingError).Err != ErrParse) {
+		t.Errorf("Error, Disk.ID must be a string of an integer in RenameDisk")
+	}
+
+	_, err = testHosting.ExtendDisk(disk, 1)
+	if (err.(*HostingError).Err != ErrParse) {
+		t.Errorf("Error, Disk.ID must be a string of an integer in ExtendDisk")
+	}
+	
+	diskimg := hosting.DiskImage{RegionID:"badid"}
+	_, err = testHosting.CreateDiskFromImage(hosting.DiskSpec{}, diskimg)
+	if (err.(*HostingError).Err != ErrNotProvided) {
+		t.Errorf("Error, DiskImage.DiskID must be a string of an integer in CreateDiskFromImage")
+	}
+	
+	diskimg.DiskID = "666"
+	
+	_, err = testHosting.CreateDiskFromImage(hosting.DiskSpec{RegionID:"1"}, diskimg)
+	if (err.(*HostingError).Err != ErrMismatch) {
+		t.Errorf("Error, DiskImage.RegionID and DiskSpec.RegionID must be equal in CreateDiskFromImage")
+	}
+	
+	_, err = testHosting.CreateDiskFromImage(hosting.DiskSpec{RegionID:"badid"}, diskimg)
+	if (err.(*HostingError).Err != ErrParse) {
+		t.Errorf("Error, DiskSpec.RegionID must be a string of an integer in CreateDiskFromImage")
+	}
+	
+	diskimg.RegionID = "1"
+	diskimg.DiskID = "badid"
+	
+	_, err = testHosting.CreateDiskFromImage(hosting.DiskSpec{RegionID:"1"}, diskimg)
+	if (err.(*HostingError).Err != ErrParse) {
+		t.Errorf("Error, DiskImage.DiskID must be a string of an integer in CreateDiskFromImage")
+	}
+
+}
