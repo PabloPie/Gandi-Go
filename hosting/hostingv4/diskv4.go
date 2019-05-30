@@ -171,8 +171,7 @@ func (h Hostingv4) DeleteDisk(disk hosting.Disk) error {
 
 // ExtendDisk extends `disk.Size` by `size` (original size + `size`)
 //
-// Disks cannot shrink in size
-// `size` is in GB
+// Disks cannot shrink in size, `size` is in GB
 func (h Hostingv4) ExtendDisk(disk hosting.Disk, size uint) (hosting.Disk, error) {
 	var fn = "ExtendDisk"
 	if disk.ID == "" {

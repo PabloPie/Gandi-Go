@@ -6,21 +6,22 @@ import (
 	"strconv"
 
 	"github.com/PabloPie/go-gandi/client"
-	"github.com/PabloPie/go-gandi/hosting"
 )
 
-// ErrNotProvided indicates that a value was not provided but was needed, e.g,
-// mandatory fields in a struct
-var ErrNotProvided = errors.New("Not provided")
+var (
+	// ErrNotProvided indicates that a value was not provided but was needed,
+	// e.g, mandatory fields in a struct
+	ErrNotProvided = errors.New("Not provided")
 
-// ErrParse indicates that there was an error transforming a value from a struct,
-// usually coming from a string to integer conversion
-var ErrParse = errors.New("Parsing error")
+	// ErrParse indicates that there was an error transforming a value from a struct,
+	// usually coming from a string to integer conversion
+	ErrParse = errors.New("Parsing error")
 
-// ErrMismatch indicates that two values that should be equal are not,
-// for example when working when distinct objects that have to be in the
-// same datacenter
-var ErrMismatch = errors.New("Value mismatch")
+	// ErrMismatch indicates that two values that should be equal are not,
+	// for example when working when distinct objects that have to be in the
+	// same datacenter
+	ErrMismatch = errors.New("Value mismatch")
+)
 
 // A Hostingv4 contains an xmlrpc client to send requests to
 type Hostingv4 struct {
@@ -50,7 +51,7 @@ func internalParseError(s string, f string) error {
 //
 // Initialized with a reusable client that contains the actual
 // xmlrpc client that will be used to send the requests
-func Newv4Hosting(client client.V4Caller) hosting.Hosting {
+func Newv4Hosting(client client.V4Caller) Hostingv4 {
 	return Hostingv4{client}
 }
 
