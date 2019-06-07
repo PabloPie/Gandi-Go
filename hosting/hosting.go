@@ -37,8 +37,12 @@ type Hosting interface {
 	// - Key search from Name
 	SSHKeyManager
 
-	// XXX: Implement Vlan management
-	// VlanManager
+	// VlanManager is an interface containing the operations related
+	// to Vlans in Gandi's platform
+	//
+	// - Vlan Creation / Deletion / Update
+	// - Vlan search
+	VlanManager
 
 	// RegionManager is an interface containing the operations to
 	// obtain information about Regions/Datacenters
