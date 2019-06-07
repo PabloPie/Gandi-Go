@@ -23,6 +23,12 @@ type IPManager interface {
 	// The IP created can only be public
 	CreateIP(region Region, version IPVersion) (IPAddress, error)
 
+	// CreatePrivateIP creates a private IPv4 within a Vlan
+	//
+	// Region is inferred from the vlan provided, so it is mandatory
+	// that it contains a valid RegionID
+	CreatePrivateIP(vlan Vlan, ip string) (IPAddress, error)
+
 	// ListIPs return a list of IPs, filtered with the options
 	// given in the IPFilter
 	//

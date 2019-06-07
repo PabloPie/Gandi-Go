@@ -30,23 +30,20 @@ type iface struct {
 
 // CreateIP creates an ip object that represents a public IP, either v4 or v6
 //
-// It requires a valid hosting.Region object, whose only mandatory field is its ID
+// It requires a valid Region object, whose only mandatory field is its ID
 // An ipv6 is always created for the interface, even when only an ipv4 is requested
 func (h Hostingv4) CreateIP(region hosting.Region, version hosting.IPVersion) (hosting.IPAddress, error) {
 	if version != hosting.IPv4 && version != hosting.IPv6 {
 		return hosting.IPAddress{}, errors.New("Bad IP version")
 	}
 
-	var err error
-	var iip iPAddressv4
-	var regionID int
-	var response = Operation{}
-
-	regionID, err = strconv.Atoi(region.ID)
+	regionID, err := strconv.Atoi(region.ID)
 	if err != nil {
-		return hosting.IPAddress{}, internalParseError("hosting.Region", "ID")
+		return hosting.IPAddress{}, internalParseError("Region", "ID")
 	}
 
+	var ip iPAddressv4
+	var response = Operation{}
 	err = h.Send("hosting.iface.create", []interface{}{
 		map[string]interface{}{
 			"datacenter_id": regionID,
@@ -60,11 +57,49 @@ func (h Hostingv4) CreateIP(region hosting.Region, version hosting.IPVersion) (h
 		return hosting.IPAddress{}, err
 	}
 
-	if err = h.Send("hosting.ip.info", []interface{}{response.IPID}, &iip); err != nil {
+	if err = h.Send("hosting.ip.info", []interface{}{response.IPID}, &ip); err != nil {
 		return hosting.IPAddress{}, err
 	}
 
-	return toIPAddress(iip), nil
+	return toIPAddress(ip), nil
+}
+
+// CreatePrivateIP creates a private IP within a specified vlan
+func (h Hostingv4) CreatePrivateIP(vlan hosting.Vlan, ip string) (hosting.IPAddress, error) {
+	var fn = "CreatePrivateIP"
+	if vlan.RegionID == "" || vlan.ID == "" {
+		return hosting.IPAddress{}, &HostingError{fn, "Vlan", "ID/RegionID", ErrNotProvided}
+	}
+	regionid, err := strconv.Atoi(vlan.RegionID)
+	if err != nil {
+		return hosting.IPAddress{}, &HostingError{fn, "Vlan", "RegionID", ErrParse}
+	}
+	vlanid, err := strconv.Atoi(vlan.ID)
+	if err != nil {
+		return hosting.IPAddress{}, &HostingError{fn, "Vlan", "ID", ErrParse}
+	}
+
+	var ipv4 iPAddressv4
+	var response = Operation{}
+	err = h.Send("hosting.iface.create", []interface{}{
+		map[string]interface{}{
+			"datacenter_id": regionid,
+			"bandwidth":     hosting.DefaultBandwidth,
+			"ip":            ip,
+			"vlan":          vlanid,
+		}}, &response)
+	if err != nil {
+		return hosting.IPAddress{}, err
+	}
+	if err = h.waitForOp(response); err != nil {
+		return hosting.IPAddress{}, err
+	}
+
+	if err = h.Send("hosting.ip.info", []interface{}{response.IPID}, &ipv4); err != nil {
+		return hosting.IPAddress{}, err
+	}
+
+	return toIPAddress(ipv4), nil
 }
 
 // ListIPs returns a list of ips filtered with the options provided in `diskFilter`

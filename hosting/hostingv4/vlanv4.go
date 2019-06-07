@@ -167,7 +167,8 @@ func (h Hostingv4) RenameVlan(vlan hosting.Vlan, newName string) (hosting.Vlan, 
 
 // DeleteVlan deletes a Vlan
 //
-// XXX: A Vlan won't be deleted if private ips belong to it???
+// A Vlan won't be deleted if there is any existing private ip
+// linked to it
 func (h Hostingv4) DeleteVlan(vlan hosting.Vlan) error {
 	var fn = "DeleteVlan"
 	if vlan.ID == "" {
