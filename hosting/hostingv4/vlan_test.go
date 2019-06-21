@@ -77,3 +77,75 @@ func TestVlanDelete(t *testing.T) {
 		t.Errorf("Error, expected vlan to be deleted, got error '%v' instead", err)
 	}
 }
+
+func TestVlanUpdateGW(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockClient := mock.NewMockV4Caller(mockCtrl)
+	testHosting := Newv4Hosting(mockClient)
+
+	vlanupdate := map[string]string{"gateway": "192.168.1.200"}
+	paramsVlanUpdate := []interface{}{1, vlanupdate}
+	responseVlanUpdate := Operation{
+		ID: 1,
+	}
+	update := mockClient.EXPECT().Send("hosting.vlan.update",
+		paramsVlanUpdate, gomock.Any()).SetArg(2, responseVlanUpdate).Return(nil)
+
+	paramsWait := []interface{}{responseVlanUpdate.ID}
+	responseWait := operationInfo{responseVlanUpdate.ID, "DONE"}
+	wait := mockClient.EXPECT().Send("operation.info",
+		paramsWait, gomock.Any()).SetArg(2, responseWait).Return(nil).After(update)
+
+	paramsVlanList := []interface{}{map[string]interface{}{"id": []int{1}}}
+	responseVlanList := []vlanv4{{ID: 1, RegionID: 5, Gateway: "192.168.1.200",
+		Name: "testvlan", Subnet: "192.168.1.0/24"}}
+	mockClient.EXPECT().Send("hosting.vlan.list",
+		paramsVlanList, gomock.Any()).SetArg(2, responseVlanList).Return(nil).After(wait)
+
+	expectedVlan := hosting.Vlan{ID: "1", RegionID: "5", Gateway: "192.168.1.200",
+		Name: "testvlan", Subnet: "192.168.1.0/24"}
+
+	oldvlan := hosting.Vlan{ID: "1", Gateway: "192.168.1.1"}
+	vlan, _ := testHosting.UpdateVlanGW(oldvlan, "192.168.1.200")
+
+	if !reflect.DeepEqual(vlan, expectedVlan) {
+		t.Errorf("Error, expected %+v, got instead %+v", expectedVlan, vlan)
+	}
+}
+
+func TestRenameVlan(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockClient := mock.NewMockV4Caller(mockCtrl)
+	testHosting := Newv4Hosting(mockClient)
+
+	vlanupdate := map[string]string{"name": "newvlanname"}
+	paramsVlanUpdate := []interface{}{1, vlanupdate}
+	responseVlanUpdate := Operation{
+		ID: 1,
+	}
+	update := mockClient.EXPECT().Send("hosting.vlan.update",
+		paramsVlanUpdate, gomock.Any()).SetArg(2, responseVlanUpdate).Return(nil)
+
+	paramsWait := []interface{}{responseVlanUpdate.ID}
+	responseWait := operationInfo{responseVlanUpdate.ID, "DONE"}
+	wait := mockClient.EXPECT().Send("operation.info",
+		paramsWait, gomock.Any()).SetArg(2, responseWait).Return(nil).After(update)
+
+	paramsVlanList := []interface{}{map[string]interface{}{"name": "newvlanname"}}
+	responseVlanList := []vlanv4{{ID: 1, RegionID: 5, Gateway: "192.168.1.1",
+		Name: "newvlanname", Subnet: "192.168.1.0/24"}}
+	mockClient.EXPECT().Send("hosting.vlan.list",
+		paramsVlanList, gomock.Any()).SetArg(2, responseVlanList).Return(nil).After(wait)
+
+	expectedVlan := hosting.Vlan{ID: "1", RegionID: "5", Gateway: "192.168.1.1",
+		Name: "newvlanname", Subnet: "192.168.1.0/24"}
+
+	oldvlan := hosting.Vlan{ID: "1", Name: "oldvlanname"}
+	vlan, _ := testHosting.RenameVlan(oldvlan, "newvlanname")
+
+	if !reflect.DeepEqual(vlan, expectedVlan) {
+		t.Errorf("Error, expected %+v, got instead %+v", expectedVlan, vlan)
+	}
+}
