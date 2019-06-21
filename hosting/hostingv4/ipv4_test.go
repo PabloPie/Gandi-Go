@@ -37,6 +37,13 @@ var regions = []hosting.Region{
 	{ID: "789", Name: "Centro de datos 789", Country: "Espana"},
 }
 
+var privateips = []iPAddressv4{
+	{ID: 999, IP: "192.168.0.1", RegionID: 123, Version: 4, VM: 0, State: "created"},
+}
+var vlans = []hosting.Vlan{
+	{ID: "987", Name: "PrivateLAN1", Gateway: "192.168.0.254", Subnet: "192.168.0.0/24", RegionID: regions[0].ID},
+}
+
 /* CreateIP */
 
 func TestCreateIPv6(t *testing.T) {
@@ -53,7 +60,7 @@ func testCreateIP(t *testing.T, version hosting.IPVersion, theIP string, region 
 	mockClient := mock.NewMockV4Caller(mockCtrl)
 	testHosting := Newv4Hosting(mockClient)
 
-	myOp := Operation{ID: 1, IPID: 666}
+	myOp := Operation{ID: 1, IPID: 987}
 	regionIDInt, _ := strconv.Atoi(region.ID)
 
 	creation := mockClient.EXPECT().Send("hosting.iface.create",
@@ -97,6 +104,48 @@ func testCreateIP(t *testing.T, version hosting.IPVersion, theIP string, region 
 	}
 }
 
+func TestCreatePrivateIP(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockClient := mock.NewMockV4Caller(mockCtrl)
+	testHosting := Newv4Hosting(mockClient)
+
+	myOp := Operation{ID: 1, IPID: privateips[0].ID}
+
+	creation := mockClient.EXPECT().Send("hosting.iface.create",
+		[]interface{}{map[string]interface{}{
+			"datacenter_id": privateips[0].RegionID,
+			"bandwidth":     hosting.DefaultBandwidth,
+			"ip":            privateips[0].IP,
+			"vlan":          987,
+		}},
+		gomock.Any()).SetArg(2, myOp).Return(nil)
+
+	wait := mockClient.EXPECT().Send("operation.info",
+		[]interface{}{myOp.ID},
+		gomock.Any()).SetArg(2, operationInfo{myOp.ID, "DONE"}).Return(nil).After(creation)
+
+	ipaddressv4 := privateips[0]
+
+	ipexpected := hosting.IPAddress{
+		ID:       "999",
+		IP:       privateips[0].IP,
+		RegionID: vlans[0].RegionID,
+		Version:  hosting.IPVersion(4),
+		VM:       "0",
+		State:    "created",
+	}
+
+	mockClient.EXPECT().Send("hosting.ip.info",
+		[]interface{}{myOp.IPID},
+		gomock.Any()).SetArg(2, ipaddressv4).Return(nil).After(wait)
+
+	ipresult, _ := testHosting.CreatePrivateIP(vlans[0], privateips[0].IP)
+
+	if !reflect.DeepEqual(ipexpected, ipresult) {
+		t.Errorf("Error, expected %+v, got instead %+v", ipexpected, ipresult)
+	}
+}
 func TestCreateIPbadVersion(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
