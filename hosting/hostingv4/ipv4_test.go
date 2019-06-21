@@ -110,7 +110,7 @@ func TestCreatePrivateIP(t *testing.T) {
 	mockClient := mock.NewMockV4Caller(mockCtrl)
 	testHosting := Newv4Hosting(mockClient)
 
-	myOp := Operation{ID: 1, IPID: privateips[0].ID}
+	creationresponse := Operation{ID: 1, IPID: privateips[0].ID}
 
 	creation := mockClient.EXPECT().Send("hosting.iface.create",
 		[]interface{}{map[string]interface{}{
@@ -119,11 +119,11 @@ func TestCreatePrivateIP(t *testing.T) {
 			"ip":            privateips[0].IP,
 			"vlan":          987,
 		}},
-		gomock.Any()).SetArg(2, myOp).Return(nil)
+		gomock.Any()).SetArg(2, creationresponse).Return(nil)
 
 	wait := mockClient.EXPECT().Send("operation.info",
-		[]interface{}{myOp.ID},
-		gomock.Any()).SetArg(2, operationInfo{myOp.ID, "DONE"}).Return(nil).After(creation)
+		[]interface{}{creationresponse.ID},
+		gomock.Any()).SetArg(2, operationInfo{creationresponse.ID, "DONE"}).Return(nil).After(creation)
 
 	ipaddressv4 := privateips[0]
 
@@ -137,7 +137,7 @@ func TestCreatePrivateIP(t *testing.T) {
 	}
 
 	mockClient.EXPECT().Send("hosting.ip.info",
-		[]interface{}{myOp.IPID},
+		[]interface{}{creationresponse.IPID},
 		gomock.Any()).SetArg(2, ipaddressv4).Return(nil).After(wait)
 
 	ipresult, _ := testHosting.CreatePrivateIP(vlans[0], privateips[0].IP)
@@ -146,6 +146,7 @@ func TestCreatePrivateIP(t *testing.T) {
 		t.Errorf("Error, expected %+v, got instead %+v", ipexpected, ipresult)
 	}
 }
+
 func TestCreateIPbadVersion(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()

@@ -49,7 +49,7 @@ func (h Hostingv4) CreateDisk(newDisk hosting.DiskSpec) (hosting.Disk, error) {
 
 	response := Operation{}
 	params := []interface{}{disk}
-	log.Printf("[INFO] Creating hosting.Disk %s...", newDisk.Name)
+	log.Printf("[INFO] Creating Disk %s...", newDisk.Name)
 	err = h.Send("hosting.disk.create", params, &response)
 	if err != nil {
 		return hosting.Disk{}, err
@@ -57,7 +57,7 @@ func (h Hostingv4) CreateDisk(newDisk hosting.DiskSpec) (hosting.Disk, error) {
 	if err := h.waitForOp(response); err != nil {
 		return hosting.Disk{}, err
 	}
-	log.Printf("[INFO] hosting.Disk %s(ID: %d) created!", newDisk.Name, response.DiskID)
+	log.Printf("[INFO] Disk %s(ID: %d) created!", newDisk.Name, response.DiskID)
 
 	return h.diskFromID(response.DiskID)
 }
@@ -69,10 +69,10 @@ func (h Hostingv4) CreateDisk(newDisk hosting.DiskSpec) (hosting.Disk, error) {
 func (h Hostingv4) CreateDiskFromImage(newDisk hosting.DiskSpec, srcDisk hosting.DiskImage) (hosting.Disk, error) {
 	var fn = "CreateDiskFromImage"
 	if srcDisk.DiskID == "" {
-		return hosting.Disk{}, &HostingError{fn, "hosting.DiskImage", "DiskID", ErrNotProvided}
+		return hosting.Disk{}, &HostingError{fn, "DiskImage", "DiskID", ErrNotProvided}
 	}
 	if srcDisk.RegionID != newDisk.RegionID {
-		return hosting.Disk{}, &HostingError{fn, "hosting.DiskSpec/hosting.DiskImage", "RegionID", ErrMismatch}
+		return hosting.Disk{}, &HostingError{fn, "DiskSpec/DiskImage", "RegionID", ErrMismatch}
 	}
 
 	diskv4, err := toDiskSpecv4(newDisk)
@@ -82,12 +82,12 @@ func (h Hostingv4) CreateDiskFromImage(newDisk hosting.DiskSpec, srcDisk hosting
 	disk, _ := structToMap(diskv4)
 	imageid, err := strconv.Atoi(srcDisk.DiskID)
 	if err != nil {
-		return hosting.Disk{}, &HostingError{fn, "hosting.DiskImage", "DiskID", ErrParse}
+		return hosting.Disk{}, &HostingError{fn, "DiskImage", "DiskID", ErrParse}
 	}
 
 	response := Operation{}
 	params := []interface{}{disk, imageid}
-	log.Printf("[INFO] Creating hosting.Disk %s...", newDisk.Name)
+	log.Printf("[INFO] Creating Disk %s...", newDisk.Name)
 	err = h.Send("hosting.disk.create_from", params, &response)
 	if err != nil {
 		return hosting.Disk{}, err
@@ -96,7 +96,7 @@ func (h Hostingv4) CreateDiskFromImage(newDisk hosting.DiskSpec, srcDisk hosting
 		return hosting.Disk{}, err
 	}
 
-	log.Printf("[INFO] hosting.Disk %s(ID: %d) created!", newDisk.Name, response.DiskID)
+	log.Printf("[INFO] Disk %s(ID: %d) created!", newDisk.Name, response.DiskID)
 	return h.diskFromID(response.DiskID)
 }
 
@@ -105,10 +105,10 @@ func (h Hostingv4) ListAllDisks() ([]hosting.Disk, error) {
 	return h.ListDisks(hosting.DiskFilter{})
 }
 
-// DiskFromName is a helper function to get a hosting.Disk given its name
+// DiskFromName is a helper function to get a Disk given its name
 //
-// If the hosting.Disk does not exist or an error occurred it returns an empty hosting.Disk,
-// use ListDisks with an appropriate hosting.DiskFilter to get more details
+// If the Disk does not exist or an error occurred it returns an empty hosting.Disk,
+// use ListDisks with an appropriate DiskFilter to get more details
 // on the possible errors
 func (h Hostingv4) DiskFromName(name string) hosting.Disk {
 	disks, err := h.ListDisks(hosting.DiskFilter{Name: name})
@@ -145,18 +145,18 @@ func (h Hostingv4) ListDisks(diskfilter hosting.DiskFilter) ([]hosting.Disk, err
 	return disks, nil
 }
 
-// DeleteDisk deletes the hosting.Disk `disk`
+// DeleteDisk deletes the Disk `disk`
 //
 // A disk won't be deleted if it is still attached to a hosting.VM
 func (h Hostingv4) DeleteDisk(disk hosting.Disk) error {
 	var fn = "DeleteDisk"
 	if disk.ID == "" {
-		return &HostingError{fn, "hosting.Disk", "ID", ErrNotProvided}
+		return &HostingError{fn, "Disk", "ID", ErrNotProvided}
 	}
 
 	diskid, err := strconv.Atoi(disk.ID)
 	if err != nil {
-		return &HostingError{fn, "hosting.Disk", "ID", ErrParse}
+		return &HostingError{fn, "Disk", "ID", ErrParse}
 	}
 
 	response := Operation{}
@@ -175,14 +175,14 @@ func (h Hostingv4) DeleteDisk(disk hosting.Disk) error {
 func (h Hostingv4) ExtendDisk(disk hosting.Disk, size uint) (hosting.Disk, error) {
 	var fn = "ExtendDisk"
 	if disk.ID == "" {
-		return hosting.Disk{}, &HostingError{fn, "hosting.Disk", "ID", ErrNotProvided}
+		return hosting.Disk{}, &HostingError{fn, "Disk", "ID", ErrNotProvided}
 	}
 	// size is given in GB and API expects MB
 	newSize := disk.Size*1024 + int(size)*1024
 	diskupdate := map[string]int{"size": newSize}
 	diskid, err := strconv.Atoi(disk.ID)
 	if err != nil {
-		return hosting.Disk{}, &HostingError{fn, "hosting.Disk", "ID", ErrParse}
+		return hosting.Disk{}, &HostingError{fn, "Disk", "ID", ErrParse}
 	}
 
 	response := Operation{}
@@ -202,12 +202,12 @@ func (h Hostingv4) ExtendDisk(disk hosting.Disk, size uint) (hosting.Disk, error
 func (h Hostingv4) RenameDisk(disk hosting.Disk, newName string) (hosting.Disk, error) {
 	var fn = "RenameDisk"
 	if disk.ID == "" {
-		return hosting.Disk{}, &HostingError{fn, "hosting.Disk", "ID", ErrNotProvided}
+		return hosting.Disk{}, &HostingError{fn, "Disk", "ID", ErrNotProvided}
 	}
 	diskupdate := map[string]string{"name": newName}
 	diskid, err := strconv.Atoi(disk.ID)
 	if err != nil {
-		return hosting.Disk{}, &HostingError{fn, "hosting.Disk", "ID", ErrParse}
+		return hosting.Disk{}, &HostingError{fn, "Disk", "ID", ErrParse}
 	}
 
 	response := Operation{}
@@ -240,11 +240,11 @@ func (h Hostingv4) diskFromID(id int) (hosting.Disk, error) {
 
 // Conversion functions for Disks in Gandi v4
 
-// Hosting hosting.DiskSpec -> v4 hosting.DiskSpec
+// Hosting DiskSpec -> v4 DiskSpec
 func toDiskSpecv4(disk hosting.DiskSpec) (diskSpecv4, error) {
 	region, err := strconv.Atoi(disk.RegionID)
 	if err != nil {
-		return diskSpecv4{}, internalParseError("hosting.DiskSpec", "RegionID")
+		return diskSpecv4{}, internalParseError("DiskSpec", "RegionID")
 	}
 	return diskSpecv4{
 		RegionID: region,
@@ -253,21 +253,21 @@ func toDiskSpecv4(disk hosting.DiskSpec) (diskSpecv4, error) {
 	}, nil
 }
 
-// Hosting hosting.DiskFilter -> v4 hosting.DiskFilter
+// Hosting DiskFilter -> v4 DiskFilter
 func toDiskFilterv4(disk hosting.DiskFilter) (diskFilterv4, error) {
 	region := toInt(disk.RegionID)
 	if region == -1 {
-		return diskFilterv4{}, internalParseError("hosting.DiskFilter", "RegionID")
+		return diskFilterv4{}, internalParseError("DiskFilter", "RegionID")
 	}
 
 	id := toInt(disk.ID)
 	if id == -1 {
-		return diskFilterv4{}, internalParseError("hosting.DiskFilter", "ID")
+		return diskFilterv4{}, internalParseError("DiskFilter", "ID")
 	}
 
 	vmid := toInt(disk.VMID)
 	if vmid == -1 {
-		return diskFilterv4{}, internalParseError("hosting.DiskFilter", "VMID")
+		return diskFilterv4{}, internalParseError("DiskFilter", "VMID")
 	}
 	return diskFilterv4{
 		RegionID: region,
@@ -277,7 +277,7 @@ func toDiskFilterv4(disk hosting.DiskFilter) (diskFilterv4, error) {
 	}, nil
 }
 
-// v4 hosting.Disk -> Hosting hosting.Disk
+// v4 Disk -> Hosting Disk
 func fromDiskv4(disk diskv4) hosting.Disk {
 	id := strconv.Itoa(disk.ID)
 	region := strconv.Itoa(disk.RegionID)
