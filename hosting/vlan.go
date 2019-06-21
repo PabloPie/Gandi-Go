@@ -11,8 +11,8 @@ type VlanManager interface {
 	// An unset field in `vlanfilter` is ignored when making the
 	// request
 	ListVlans(vlanfilter VlanFilter) ([]Vlan, error)
-	UpdateVlanGW(vlan Vlan) (Vlan, error)
-	RenameVlan(vlan Vlan) (Vlan, error)
+	UpdateVlanGW(vlan Vlan, newGW string) (Vlan, error)
+	RenameVlan(vlan Vlan, newName string) (Vlan, error)
 	DeleteVlan(vlan Vlan) error
 }
 
